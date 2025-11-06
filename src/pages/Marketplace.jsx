@@ -194,20 +194,30 @@ const Marketplace = () => {
       
       // More defensive check to ensure products is always an array
       let productsData = [];
+      let paginationData = { page: 1, pages: 1, total: 0 }; // ✅ Default pagination
+      
       if (res && res.data) {
         if (Array.isArray(res.data)) {
           productsData = res.data;
         } else if (res.data.products && Array.isArray(res.data.products)) {
           productsData = res.data.products;
+          // ✅ Safely extract pagination with defaults
+          paginationData = {
+            page: res.data.pagination?.page || 1,
+            pages: res.data.pagination?.pages || 1,
+            total: res.data.pagination?.total || productsData.length,
+            limit: res.data.pagination?.limit || 20
+          };
         }
       }
       
       setProducts(productsData);
-      setPagination(res.data && res.data.pagination ? res.data.pagination : {});
+      setPagination(paginationData); // ✅ Always set valid pagination
     } catch (error) {
       console.error('Error fetching products:', error);
-      // Set products to empty array on error
+      // Set products to empty array and reset pagination on error
       setProducts([]);
+      setPagination({ page: 1, pages: 1, total: 0 }); // ✅ Reset pagination on error
     } finally {
       setLoading(false);
     }
@@ -469,45 +479,54 @@ const Marketplace = () => {
                   ))}
                 </div>
 
-                {/* Pagination - Updated with safe pagination access */}
-                {(getSafePagination().pages || 0) > 1 && (
-                  <div className="flex justify-center mt-8">
-                    <nav className="flex items-center gap-2">
-                      <button
-                        onClick={() => fetchProducts((getSafePagination().page || 1) - 1)}
-                        disabled={(getSafePagination().page || 1) <= 1}
-                        className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                      >
-                        Previous
-                      </button>
-                      
-                      {[...Array(Math.max(0, getSafePagination().pages || 0))].map((_, i) => {
-                        const page = i + 1;
-                        return (
+                {/* Pagination - Fully Safe Version */}
+                {(() => {
+                  const safePagination = getSafePagination();
+                  const totalPages = safePagination.pages || 0;
+                  const currentPage = safePagination.page || 1;
+                  
+                  // Don't show pagination if only 1 page or no pages
+                  if (totalPages <= 1) return null;
+                  
+                  return (
+                    <div className="flex justify-center mt-8">
+                      <nav className="flex items-center gap-2">
+                        {/* Previous Button */}
+                        <button
+                          onClick={() => fetchProducts(currentPage - 1)}
+                          disabled={currentPage <= 1}
+                          className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                        >
+                          Previous
+                        </button>
+                        
+                        {/* Page Numbers */}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                           <button
                             key={page}
                             onClick={() => fetchProducts(page)}
-                            className={`px-4 py-2 rounded-lg ${
-                              page === (getSafePagination().page || 1)
-                                ? 'bg-green-600 text-white'
+                            className={`px-4 py-2 rounded-lg transition-colors ${
+                              page === currentPage
+                                ? 'bg-green-600 text-white font-semibold'
                                 : 'border border-gray-300 hover:bg-gray-50'
                             }`}
                           >
                             {page}
                           </button>
-                        );
-                      })}
-                      
-                      <button
-                        onClick={() => fetchProducts((getSafePagination().page || 1) + 1)}
-                        disabled={(getSafePagination().page || 1) >= (getSafePagination().pages || 1)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                      >
-                        Next
-                      </button>
-                    </nav>
-                  </div>
-                )}
+                        ))}
+                        
+                        {/* Next Button */}
+                        <button
+                          onClick={() => fetchProducts(currentPage + 1)}
+                          disabled={currentPage >= totalPages}
+                          className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                        >
+                          Next
+                        </button>
+                      </nav>
+                    </div>
+                  );
+                })()}
 
               </>
             )}
