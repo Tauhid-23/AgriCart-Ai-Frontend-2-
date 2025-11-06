@@ -189,9 +189,19 @@ const Marketplace = () => {
       if (maxPrice) params.maxPrice = maxPrice;
 
       const res = await axios.get('/api/marketplace/products', { params });
-      // Defensive check to ensure products is always an array
-      setProducts(Array.isArray(res.data.products) ? res.data.products : []);
-      setPagination(res.data.pagination || {});
+      
+      // More defensive check to ensure products is always an array
+      let productsData = [];
+      if (res && res.data) {
+        if (Array.isArray(res.data)) {
+          productsData = res.data;
+        } else if (res.data.products && Array.isArray(res.data.products)) {
+          productsData = res.data.products;
+        }
+      }
+      
+      setProducts(productsData);
+      setPagination(res.data && res.data.pagination ? res.data.pagination : {});
     } catch (error) {
       console.error('Error fetching products:', error);
       // Set products to empty array on error
@@ -244,6 +254,17 @@ const Marketplace = () => {
       'protective-gear': '🧤'
     };
     return icons[category] || '📦';
+  };
+
+  // Add a helper function to safely get products array
+  const getSafeProducts = () => {
+    // Extra safety check to ensure we always return an array
+    try {
+      return Array.isArray(products) ? products : [];
+    } catch (error) {
+      console.error('Error accessing products array:', error);
+      return [];
+    }
   };
 
   return (
@@ -388,7 +409,7 @@ const Marketplace = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-700">
-                    Showing <span className="font-semibold">{(products && Array.isArray(products) ? products : []).length}</span> of{' '}
+                    Showing <span className="font-semibold">{getSafeProducts().length}</span> of{' '}
                     <span className="font-semibold">{pagination.total || 0}</span> products
                     {selectedCategory && (
                       <span className="text-green-600 ml-2">
@@ -415,7 +436,7 @@ const Marketplace = () => {
                   </div>
                 ))}
               </div>
-            ) : (products && Array.isArray(products) ? products : []).length === 0 ? (
+            ) : getSafeProducts().length === 0 ? (
               <div className="bg-white rounded-lg shadow-md p-12 text-center">
                 <div className="text-6xl mb-4">🔍</div>
                 <h3 className="text-2xl font-bold text-gray-700 mb-2">No products found</h3>
@@ -427,7 +448,7 @@ const Marketplace = () => {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {(products && Array.isArray(products) ? products : []).map(product => (
+                  {getSafeProducts().map(product => (
                     <ProductCard 
                       key={product._id} 
                       product={product} 
