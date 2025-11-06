@@ -23,17 +23,29 @@ const MarketplaceTest = () => {
     setError(null);
     try {
       console.log('Fetching products...');
+      console.log('API Base URL:', process.env.REACT_APP_API_URL || '/api');
+      
       const res = await axios.get('/api/marketplace/products');
       console.log('API Response:', res);
+      
+      // Log the exact structure we're getting
+      console.log('Response data type:', typeof res.data);
+      console.log('Response data keys:', Object.keys(res.data));
+      console.log('Has products property:', 'products' in res.data);
+      console.log('Products type:', typeof res.data.products);
+      console.log('Products is array:', Array.isArray(res.data.products));
+      console.log('Has pagination property:', 'pagination' in res.data);
       
       let productsData = [];
       let paginationData = { page: 1, pages: 1, total: 0 };
       
       if (res && res.data) {
         if (Array.isArray(res.data)) {
+          console.log('Data is direct array');
           productsData = res.data;
           paginationData = { page: 1, pages: 1, total: productsData.length };
         } else if (res.data.products && Array.isArray(res.data.products)) {
+          console.log('Data has products array');
           productsData = res.data.products;
           paginationData = {
             page: res.data.pagination?.page || 1,
@@ -41,6 +53,8 @@ const MarketplaceTest = () => {
             total: res.data.pagination?.total || productsData.length,
             limit: res.data.pagination?.limit || 20
           };
+        } else {
+          console.log('Unexpected data structure:', res.data);
         }
       }
       
@@ -51,6 +65,7 @@ const MarketplaceTest = () => {
       setPagination(paginationData);
     } catch (err) {
       console.error('Error fetching products:', err);
+      console.error('Error response:', err.response);
       setError(err.message);
       setProducts([]);
       setPagination({ page: 1, pages: 1, total: 0 });
@@ -94,6 +109,12 @@ const MarketplaceTest = () => {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">🛒 Test Marketplace</h1>
           <p className="text-gray-600">Debug version to isolate the error</p>
+          <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+            <h3 className="font-semibold">Debug Info:</h3>
+            <p>Products array length: {safeProducts.length}</p>
+            <p>Pagination total: {safePagination.total}</p>
+            <p>Pagination pages: {safePagination.pages}</p>
+          </div>
         </div>
 
         {/* Results Header - ULTRA SAFE VERSION */}
