@@ -1,6 +1,3 @@
-// frontend/src/pages/Marketplace.jsx
-// Last updated: Fix undefined products array error with defensive checks
-
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -138,7 +135,7 @@ const Marketplace = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({});
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   
@@ -148,6 +145,10 @@ const Marketplace = () => {
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '');
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || '-featured');
   const [showFilters, setShowFilters] = useState(false);
+
+  // ✅ CREATE SAFE VARIABLES AT THE TOP
+  const safeProducts = Array.isArray(products) ? products : [];
+  const safePagination = pagination && typeof pagination === 'object' ? pagination : { page: 1, pages: 1, total: 0 };
 
   useEffect(() => {
     fetchCategories();
@@ -268,27 +269,6 @@ const Marketplace = () => {
     return icons[category] || '📦';
   };
 
-  // Add a helper function to safely get products array
-  const getSafeProducts = () => {
-    // Extra safety check to ensure we always return an array
-    try {
-      return Array.isArray(products) ? products : [];
-    } catch (error) {
-      console.error('Error accessing products array:', error);
-      return [];
-    }
-  };
-
-  // Add a helper function to safely get pagination data
-  const getSafePagination = () => {
-    try {
-      return pagination || {};
-    } catch (error) {
-      console.error('Error accessing pagination data:', error);
-      return {};
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       {/* Back Button and Hero Section */}
@@ -360,7 +340,7 @@ const Marketplace = () => {
                   >
                     All Products
                   </button>
-                  {categories.map(cat => (
+                  {Array.isArray(categories) && categories.map(cat => (
                     <button
                       key={cat._id}
                       onClick={() => { setSelectedCategory(cat._id); updateURLParams(); }}
@@ -426,13 +406,13 @@ const Marketplace = () => {
 
           {/* Product Grid */}
           <div className="flex-1">
-            {/* Results Header - Updated with safe pagination access */}
+            {/* Results Header - ULTRA SAFE VERSION */}
             <div className="bg-white rounded-lg shadow-md p-4 mb-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-700">
-                    Showing <span className="font-semibold">{getSafeProducts().length}</span> of{' '}
-                    <span className="font-semibold">{getSafePagination().total || 0}</span> products
+                    Showing <span className="font-semibold">{safeProducts.length}</span> of{' '}
+                    <span className="font-semibold">{safePagination.total || 0}</span> products
                     {selectedCategory && (
                       <span className="text-green-600 ml-2">
                         in {selectedCategory.replace(/-/g, ' ')}
@@ -441,7 +421,7 @@ const Marketplace = () => {
                   </p>
                 </div>
                 <div className="text-sm text-gray-500">
-                  Page {getSafePagination().page || 1} of {getSafePagination().pages || 1}
+                  Page {safePagination.page || 1} of {safePagination.pages || 1}
                 </div>
               </div>
             </div>
@@ -458,7 +438,7 @@ const Marketplace = () => {
                   </div>
                 ))}
               </div>
-            ) : getSafeProducts().length === 0 ? (
+            ) : safeProducts.length === 0 ? (
               <div className="bg-white rounded-lg shadow-md p-12 text-center">
                 <div className="text-6xl mb-4">🔍</div>
                 <h3 className="text-2xl font-bold text-gray-700 mb-2">No products found</h3>
@@ -470,7 +450,7 @@ const Marketplace = () => {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {getSafeProducts().map(product => (
+                  {safeProducts.map(product => (
                     <ProductCard 
                       key={product._id} 
                       product={product} 
@@ -479,54 +459,42 @@ const Marketplace = () => {
                   ))}
                 </div>
 
-                {/* Pagination - Fully Safe Version */}
-                {(() => {
-                  const safePagination = getSafePagination();
-                  const totalPages = safePagination.pages || 0;
-                  const currentPage = safePagination.page || 1;
-                  
-                  // Don't show pagination if only 1 page or no pages
-                  if (totalPages <= 1) return null;
-                  
-                  return (
-                    <div className="flex justify-center mt-8">
-                      <nav className="flex items-center gap-2">
-                        {/* Previous Button */}
+                {/* Pagination - ULTRA SAFE */}
+                {safePagination.pages > 1 && (
+                  <div className="flex justify-center mt-8">
+                    <nav className="flex items-center gap-2">
+                      <button
+                        onClick={() => fetchProducts(safePagination.page - 1)}
+                        disabled={safePagination.page <= 1}
+                        className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                      >
+                        Previous
+                      </button>
+                      
+                      {Array.from({ length: safePagination.pages }, (_, i) => i + 1).map((page) => (
                         <button
-                          onClick={() => fetchProducts(currentPage - 1)}
-                          disabled={currentPage <= 1}
-                          className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                          key={page}
+                          onClick={() => fetchProducts(page)}
+                          className={`px-4 py-2 rounded-lg transition-colors ${
+                            page === safePagination.page
+                              ? 'bg-green-600 text-white font-semibold'
+                              : 'border border-gray-300 hover:bg-gray-50'
+                          }`}
                         >
-                          Previous
+                          {page}
                         </button>
-                        
-                        {/* Page Numbers */}
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                          <button
-                            key={page}
-                            onClick={() => fetchProducts(page)}
-                            className={`px-4 py-2 rounded-lg transition-colors ${
-                              page === currentPage
-                                ? 'bg-green-600 text-white font-semibold'
-                                : 'border border-gray-300 hover:bg-gray-50'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        ))}
-                        
-                        {/* Next Button */}
-                        <button
-                          onClick={() => fetchProducts(currentPage + 1)}
-                          disabled={currentPage >= totalPages}
-                          className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                        >
-                          Next
-                        </button>
-                      </nav>
-                    </div>
-                  );
-                })()}
+                      ))}
+                      
+                      <button
+                        onClick={() => fetchProducts(safePagination.page + 1)}
+                        disabled={safePagination.page >= safePagination.pages}
+                        className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                      >
+                        Next
+                      </button>
+                    </nav>
+                  </div>
+                )}
 
               </>
             )}
