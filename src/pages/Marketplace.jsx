@@ -3,566 +3,206 @@
 // Fix: Ultra-safe array handling with defensive checks v4
 
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
-import { Plus, ArrowLeft } from 'lucide-react';
-
-const ProductCard = ({ product, formatPrice }) => {
-  const discountPercentage = product.discount || 0;
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  const { addToCart } = useCart();
-  
-  const handleAddToCart = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!isAuthenticated) {
-      if (confirm('You need to login to add items to your cart. Would you like to login now?')) {
-        navigate('/login', { state: { from: '/marketplace' } });
-      }
-      return;
-    }
-
-    try {
-      await addToCart(product._id, 1);
-      alert('Product added to cart!');
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      if (error.response && error.response.status === 401) {
-        if (confirm('You need to login to add items to your cart. Would you like to login now?')) {
-          navigate('/login', { state: { from: '/marketplace' } });
-        }
-      } else {
-        // Show more detailed error message
-        alert(`Failed to add product to cart: ${error.message}`);
-      }
-    }
-  };
-
-  const handleProductClick = (e) => {
-    // Scroll to top when clicking on product name
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      {/* Make the entire card clickable except for the Add to Cart button */}
-      <Link to={`/marketplace/product/${product._id}`} className="block" onClick={handleProductClick}>
-        <div className="relative">
-          <img 
-            src={product.images?.[0] || product.thumbnail || '/placeholder-product.jpg'} 
-            alt={product.name}
-            className="w-full h-48 object-cover"
-          />
-          {discountPercentage > 0 && (
-            <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-              {discountPercentage}% OFF
-            </div>
-          )}
-          {product.featured && (
-            <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded">
-              Featured
-            </div>
-          )}
-          {product.bestSeller && (
-            <div className="absolute bottom-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
-              Best Seller
-            </div>
-          )}
-        </div>
-        
-        <div className="p-4">
-          <h3 className="font-semibold text-gray-900 line-clamp-2 mb-1" onClick={handleProductClick}>{product.name}</h3>
-          <p className="text-sm text-gray-600 mb-2 line-clamp-2">{product.shortDescription || product.description}</p>
-          
-          <div className="flex items-center mb-2">
-            <div className="flex items-center">
-              <span className="text-yellow-400">★</span>
-              <span className="text-sm font-medium text-gray-900 ml-1">{product.rating || 'N/A'}</span>
-              {product.reviewCount && (
-                <span className="text-xs text-gray-500 ml-1">({product.reviewCount})</span>
-              )}
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <span className="text-lg font-bold text-gray-900">
-                {formatPrice(product.price)}
-              </span>
-              {product.originalPrice && product.originalPrice > product.price && (
-                <span className="text-sm text-gray-500 line-through ml-2">
-                  {formatPrice(product.originalPrice)}
-                </span>
-              )}
-            </div>
-          </div>
-          
-          <div className="mt-2">
-            {product.inStock ? (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                In Stock ({product.stock} available)
-              </span>
-            ) : (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                Out of Stock
-              </span>
-            )}
-          </div>
-        </div>
-      </Link>
-      
-      {/* Add to Cart section with both icon and button */}
-      <div className="px-4 pb-4">
-        <button 
-          onClick={handleAddToCart}
-          disabled={!product.inStock}
-          className={`w-full flex items-center justify-center px-3 py-2 rounded-lg transition-colors text-sm ${
-            product.inStock 
-              ? 'bg-green-600 hover:bg-green-700 text-white' 
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add to Cart
-        </button>
-      </div>
-    </div>
-  );
-};
 
 const Marketplace = () => {
-  // ✅ STATE DECLARATIONS FIRST (before any other code)
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState([]); // ✅ Empty array default
-  const [categories, setCategories] = useState([]); // ✅ Empty array default
-  const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({ 
-    page: 1, 
-    pages: 1, 
-    total: 0,
-    limit: 20 
-  }); // ✅ Full object default
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '');
-  const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '');
-  const [sortBy, setSortBy] = useState(searchParams.get('sort') || '-featured');
-  const [showFilters, setShowFilters] = useState(false);
-
-  // ✅ THEN navigate and auth hooks
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-
-  // ✅ THEN create safe variables
-  const safeProducts = Array.isArray(products) ? products : [];
-  const safePagination = pagination && typeof pagination === 'object' 
-    ? { 
-        page: pagination.page || 1,
-        pages: pagination.pages || 1,
-        total: pagination.total || 0,
-        limit: pagination.limit || 20
-      }
-    : { page: 1, pages: 1, total: 0, limit: 20 };
-
-  // ✅ DEBUG LOG
-  console.log('🔄 Marketplace Component Loaded - Version 4.0');
-  console.log('📦 Products state:', products);
-  console.log('📊 Pagination state:', pagination);
-  console.log('🛡️ Safe products:', Array.isArray(products) ? 'ARRAY' : typeof products);
+  console.log('🏪 Marketplace component mounting...');
   
-  console.log('🔄 Marketplace Render');
-  console.log('  Products:', safeProducts.length, 'items');
-  console.log('  Pagination:', safePagination);
+  // State with GUARANTEED safe defaults
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  const navigate = useNavigate();
 
-  // ✅ THEN useEffect hooks
   useEffect(() => {
-    console.log('🎯 useEffect: Fetch categories');
-    fetchCategories();
+    console.log('🎯 useEffect triggered - fetching products');
+    fetchProducts();
   }, []);
 
-  useEffect(() => {
-    console.log('🎯 useEffect: Fetch products');
-    fetchProducts();
-  }, [selectedCategory, sortBy, searchParams]);
-
-  const fetchCategories = async () => {
-    try {
-      // Since we don't have a categories endpoint, we'll use a static list
-      const staticCategories = [
-        { _id: 'seeds', count: 20 },
-        { _id: 'seedlings', count: 15 },
-        { _id: 'pots-containers', count: 15 },
-        { _id: 'soil-amendments', count: 15 },
-        { _id: 'fertilizers', count: 10 },
-        { _id: 'tools-equipment', count: 10 },
-        { _id: 'pest-control', count: 8 },
-        { _id: 'watering-irrigation', count: 0 },
-        { _id: 'grow-lights', count: 0 },
-        { _id: 'accessories', count: 0 },
-        { _id: 'books-guides', count: 0 },
-        { _id: 'composting', count: 0 },
-        { _id: 'protective-gear', count: 0 }
-      ];
-      setCategories(staticCategories);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
-  const fetchProducts = async (page = 1) => {
+  const fetchProducts = async () => {
+    console.log('📡 Starting fetchProducts...');
     setLoading(true);
+    setError(null);
+    
     try {
-      const params = { page, limit: 20, sortBy };
-      if (selectedCategory) params.category = selectedCategory;
-      if (searchQuery) params.search = searchQuery;
-      if (minPrice) params.minPrice = minPrice;
-      if (maxPrice) params.maxPrice = maxPrice;
-
-      const res = await axios.get('/api/marketplace/products', { params });
+      console.log('📤 Making API call to /api/marketplace/products');
+      const res = await axios.get('/api/marketplace/products');
+      console.log('📥 API response:', res);
+      console.log('📥 Response data:', res.data);
+      console.log('📥 Response data type:', typeof res.data);
+      console.log('📥 Is array?', Array.isArray(res.data));
       
-      // More defensive check to ensure products is always an array
+      // Super defensive data extraction
       let productsData = [];
-      let paginationData = { page: 1, pages: 1, total: 0, limit: 20 }; // ✅ Default pagination
       
       if (res && res.data) {
         if (Array.isArray(res.data)) {
+          console.log('✅ Response is array directly');
           productsData = res.data;
-        } else if (res.data.products && Array.isArray(res.data.products)) {
-          productsData = res.data.products;
-          // ✅ Safely extract pagination with defaults
-          paginationData = {
-            page: res.data.pagination?.page || 1,
-            pages: res.data.pagination?.pages || 1,
-            total: res.data.pagination?.total || productsData.length,
-            limit: res.data.pagination?.limit || 20
-          };
+        } else if (res.data.products) {
+          console.log('✅ Response has products property');
+          console.log('   Products type:', typeof res.data.products);
+          console.log('   Is array?', Array.isArray(res.data.products));
+          if (Array.isArray(res.data.products)) {
+            productsData = res.data.products;
+          }
+        } else if (res.data.data) {
+          console.log('✅ Response has data property');
+          if (Array.isArray(res.data.data)) {
+            productsData = res.data.data;
+          }
         }
       }
       
+      console.log('📦 Final productsData:', productsData);
+      console.log('📦 Products count:', productsData.length);
+      console.log('📦 Type:', typeof productsData);
+      console.log('📦 Is array?', Array.isArray(productsData));
+      
       setProducts(productsData);
-      setPagination(paginationData); // ✅ Always set valid pagination
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      // Set products to empty array and reset pagination on error
+      console.log('✅ Products state updated');
+      
+    } catch (err) {
+      console.error('❌ Error in fetchProducts:', err);
+      console.error('❌ Error message:', err.message);
+      console.error('❌ Error response:', err.response);
+      setError(err.message);
       setProducts([]);
-      setPagination({ page: 1, pages: 1, total: 0, limit: 20 }); // ✅ Reset pagination on error
     } finally {
       setLoading(false);
+      console.log('🏁 fetchProducts complete');
     }
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    updateURLParams();
-    fetchProducts(1);
-  };
+  console.log('🎨 Rendering Marketplace...');
+  console.log('   products:', products);
+  console.log('   products type:', typeof products);
+  console.log('   products is array?', Array.isArray(products));
+  console.log('   loading:', loading);
+  console.log('   error:', error);
 
-  const updateURLParams = () => {
-    const params = {};
-    if (selectedCategory) params.category = selectedCategory;
-    if (searchQuery) params.search = searchQuery;
-    if (minPrice) params.minPrice = minPrice;
-    if (maxPrice) params.maxPrice = maxPrice;
-    if (sortBy !== '-featured') params.sort = sortBy;
-    setSearchParams(params);
-  };
+  // ULTRA SAFE: Calculate count
+  let productCount = 0;
+  try {
+    if (products && Array.isArray(products)) {
+      productCount = products.length;
+    }
+  } catch (e) {
+    console.error('❌ Error calculating productCount:', e);
+    productCount = 0;
+  }
 
-  const clearFilters = () => {
-    setSelectedCategory('');
-    setSearchQuery('');
-    setMinPrice('');
-    setMaxPrice('');
-    setSortBy('-featured');
-    setSearchParams({});
-    fetchProducts(1);
-  };
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-BD', {
-      style: 'currency',
-      currency: 'BDT',
-      minimumFractionDigits: 0
-    }).format(price);
-  };
-
-  const getCategoryIcon = (category) => {
-    const icons = {
-      'seeds': '🌱', 'seedlings': '🌿', 'pots-containers': '🏺',
-      'soil-amendments': '🪴', 'fertilizers': '🧪', 'tools-equipment': '🛠️',
-      'pest-control': '🐛', 'watering-irrigation': '💧', 'grow-lights': '💡',
-      'accessories': '🎒', 'books-guides': '📚', 'composting': '♻️',
-      'protective-gear': '🧤'
-    };
-    return icons[category] || '📦';
-  };
+  console.log('📊 Product count:', productCount);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
-      {/* Back Button and Hero Section */}
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
           <button 
             onClick={() => navigate(-1)}
-            className="flex items-center text-green-100 hover:text-white mb-2"
+            className="mb-4 text-green-600 hover:text-green-700"
           >
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Back
+            ← Back
           </button>
-          <h1 className="text-4xl font-bold mb-2">🛒 Gardening Marketplace</h1>
-          <p className="text-green-100">Discover 100+ quality products for your urban garden</p>
+          <h1 className="text-4xl font-bold text-gray-900">
+            🛒 Marketplace
+          </h1>
         </div>
-      </div>
 
-      {/* Search Bar - Removed sticky positioning */}
-      <div className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder="Search products... (e.g., tomato seeds, pots, fertilizer)"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-              <span className="absolute left-3 top-3.5 text-gray-400">🔍</span>
-            </div>
-            <button type="submit" className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-              Search
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors lg:hidden"
-            >
-              Filters
-            </button>
-          </form>
+        {/* Debug Info */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
+          <p className="font-semibold text-yellow-800 mb-2">🐛 Debug Info:</p>
+          <pre className="text-xs text-yellow-700 overflow-auto">
+{`Loading: ${loading}
+Error: ${error || 'none'}
+Products type: ${typeof products}
+Products is array: ${Array.isArray(products)}
+Products count: ${productCount}
+Products value: ${JSON.stringify(products, null, 2).substring(0, 200)}...`}
+          </pre>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filters */}
-          <div className={`lg:w-64 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-24">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-lg">Filters</h3>
-                {(selectedCategory || searchQuery || minPrice || maxPrice) && (
-                  <button onClick={clearFilters} className="text-sm text-green-600 hover:text-green-700">
-                    Clear All
-                  </button>
-                )}
-              </div>
-
-              {/* Categories */}
-              <div className="mb-6">
-                <h4 className="font-semibold mb-3">Categories</h4>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => { setSelectedCategory(''); updateURLParams(); }}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                      !selectedCategory ? 'bg-green-100 text-green-700 font-medium' : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    All Products
-                  </button>
-                  {Array.isArray(categories) && categories.map(cat => (
-                    <button
-                      key={cat._id}
-                      onClick={() => { setSelectedCategory(cat._id); updateURLParams(); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center justify-between ${
-                        selectedCategory === cat._id ? 'bg-green-100 text-green-700 font-medium' : 'hover:bg-gray-100'
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        {getCategoryIcon(cat._id)}
-                        <span className="capitalize">{cat._id.replace(/-/g, ' ')}</span>
-                      </span>
-                      <span className="text-xs bg-gray-200 px-2 py-1 rounded-full">({cat.count})</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Price Range */}
-              <div className="mb-6">
-                <h4 className="font-semibold mb-3">Price Range (BDT)</h4>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                    className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                    className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                  />
-                </div>
-                <button
-                  onClick={() => { updateURLParams(); fetchProducts(1); }}
-                  className="w-full mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Apply
-                </button>
-              </div>
-
-              {/* Sort */}
-              <div>
-                <h4 className="font-semibold mb-3">Sort By</h4>
-                <select
-                  value={sortBy}
-                  onChange={(e) => { setSortBy(e.target.value); updateURLParams(); }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="-featured">Featured</option>
-                  <option value="-rating">Highest Rated</option>
-                  <option value="price">Price: Low to High</option>
-                  <option value="-price">Price: High to Low</option>
-                  <option value="-purchases">Best Selling</option>
-                  <option value="-createdAt">Newest</option>
-                </select>
-              </div>
-            </div>
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading products...</p>
           </div>
+        )}
 
-          {/* Product Grid */}
-          <div className="flex-1">
-            {/* Results Header - ULTRA SAFE VERSION V2 */}
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-700">
-                    Showing{' '}
-                    {(() => {
-                      try {
-                        return Array.isArray(products) ? products.length : 0;
-                      } catch (e) {
-                        console.error('Error accessing products.length:', e);
-                        return 0;
-                      }
-                    })()}
-                    {' '}of{' '}
-                    {(() => {
-                      try {
-                        return (pagination && pagination.total) ? pagination.total : 0;
-                      } catch (e) {
-                        console.error('Error accessing pagination.total:', e);
-                        return 0;
-                      }
-                    })()}
-                    {' '}products
-                    {selectedCategory && (
-                      <span className="text-green-600 ml-2">
-                        in {selectedCategory.replace(/-/g, ' ')}
-                      </span>
-                    )}
-                  </p>
-                </div>
-                <div className="text-sm text-gray-500">
-                  Page{' '}
-                  {(() => {
-                    try {
-                      return (pagination && pagination.page) ? pagination.page : 1;
-                    } catch (e) {
-                      return 1;
-                    }
-                  })()}
-                  {' '}of{' '}
-                  {(() => {
-                    try {
-                      return (pagination && pagination.pages) ? pagination.pages : 1;
-                    } catch (e) {
-                      return 1;
-                    }
-                  })()}
-                </div>
-              </div>
+        {/* Error State */}
+        {!loading && error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
+            <div className="text-red-600 text-6xl mb-4">⚠️</div>
+            <h3 className="text-2xl font-bold text-red-800 mb-2">Error Loading Products</h3>
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={fetchProducts}
+              className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {/* Products Display */}
+        {!loading && !error && (
+          <>
+            <div className="mb-6">
+              <p className="text-gray-700">
+                Showing <span className="font-semibold">{productCount}</span> products
+              </p>
             </div>
 
-            {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
-                    <div className="h-48 bg-gray-200"></div>
-                    <div className="p-4 space-y-3">
-                      <div className="h-4 bg-gray-200 rounded"></div>
-                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : safeProducts.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-md p-12 text-center">
-                <div className="text-6xl mb-4">🔍</div>
-                <h3 className="text-2xl font-bold text-gray-700 mb-2">No products found</h3>
-                <p className="text-gray-500 mb-6">Try adjusting your filters or search query</p>
-                <button onClick={clearFilters} className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                  Clear Filters
-                </button>
+            {productCount === 0 ? (
+              <div className="bg-white rounded-lg shadow p-12 text-center">
+                <div className="text-gray-400 text-6xl mb-4">📦</div>
+                <h3 className="text-2xl font-bold text-gray-700 mb-2">No Products Found</h3>
+                <p className="text-gray-500">Check back soon for new products!</p>
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {safeProducts.map(product => (
-                    <ProductCard 
-                      key={product._id} 
-                      product={product} 
-                      formatPrice={formatPrice}
-                    />
-                  ))}
-                </div>
-
-                {/* Pagination - ULTRA SAFE */}
-                {safePagination.pages > 1 && (
-                  <div className="flex justify-center mt-8">
-                    <nav className="flex items-center gap-2">
-                      <button
-                        onClick={() => fetchProducts(safePagination.page - 1)}
-                        disabled={safePagination.page <= 1}
-                        className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                      >
-                        Previous
-                      </button>
-                      
-                      {Array.from({ length: safePagination.pages }, (_, i) => i + 1).map((page) => (
-                        <button
-                          key={page}
-                          onClick={() => fetchProducts(page)}
-                          className={`px-4 py-2 rounded-lg transition-colors ${
-                            page === safePagination.page
-                              ? 'bg-green-600 text-white font-semibold'
-                              : 'border border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
-                      
-                      <button
-                        onClick={() => fetchProducts(safePagination.page + 1)}
-                        disabled={safePagination.page >= safePagination.pages}
-                        className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                      >
-                        Next
-                      </button>
-                    </nav>
-                  </div>
-                )}
-
-              </>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {Array.isArray(products) && products.map((product, index) => {
+                  try {
+                    return (
+                      <div key={product._id || product.id || index} className="bg-white rounded-lg shadow-md p-4">
+                        <img 
+                          src={product.images?.[0] || product.image || '/placeholder.jpg'} 
+                          alt={product.name || 'Product'}
+                          className="w-full h-48 object-cover rounded-lg mb-4"
+                          onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                        />
+                        <h3 className="font-semibold text-lg mb-2 line-clamp-2">
+                          {product.name || 'Unnamed Product'}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                          {product.description || 'No description'}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-2xl font-bold text-green-600">
+                            ৳{product.price || 0}
+                          </span>
+                          <Link
+                            to={`/marketplace/product/${product._id || product.id}`}
+                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                          >
+                            View
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  } catch (err) {
+                    console.error('❌ Error rendering product:', err, product);
+                    return null;
+                  }
+                })}
+              </div>
             )}
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

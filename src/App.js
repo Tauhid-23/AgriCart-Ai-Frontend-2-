@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 
+// Error Boundary
+import ErrorBoundary from "./components/ErrorBoundary";
+
 // Marketing Pages
 import LandingPage from "./pages/marketing/LandingPage";
 import FeaturesPage from "./pages/marketing/FeaturesPage";
@@ -38,6 +41,8 @@ import MarketplaceTest from "./pages/MarketplaceTest";
 import MarketplaceMinimal from "./pages/MarketplaceMinimal";
 import EnvTest from "./pages/EnvTest";
 import ErrorTest from "./pages/ErrorTest";
+import MarketplaceDebug from "./pages/MarketplaceDebug";
+import MarketplaceFinal from "./pages/MarketplaceFinal";
 import ProductDetail from "./pages/ProductDetail";
 import ShoppingCart from "./pages/ShoppingCart";
 import CheckoutPage from "./pages/CheckoutPage";
@@ -72,6 +77,8 @@ function App() {
               <Route path="/marketplace/minimal" element={<MarketplaceMinimal />} />
               <Route path="/marketplace/env-test" element={<EnvTest />} />
               <Route path="/marketplace/error-test" element={<ErrorTest />} />
+              <Route path="/marketplace/debug" element={<MarketplaceDebug />} />
+              <Route path="/marketplace/final" element={<MarketplaceFinal />} />
               <Route path="/marketplace/product/:productId" element={<ProductDetailWithLayout />} />
 
               {/* Auth Pages */}
