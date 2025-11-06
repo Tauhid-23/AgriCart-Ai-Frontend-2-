@@ -189,10 +189,13 @@ const Marketplace = () => {
       if (maxPrice) params.maxPrice = maxPrice;
 
       const res = await axios.get('/api/marketplace/products', { params });
-      setProducts(res.data.products);
-      setPagination(res.data.pagination);
+      // Defensive check to ensure products is always an array
+      setProducts(Array.isArray(res.data.products) ? res.data.products : []);
+      setPagination(res.data.pagination || {});
     } catch (error) {
       console.error('Error fetching products:', error);
+      // Set products to empty array on error
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -412,7 +415,7 @@ const Marketplace = () => {
                   </div>
                 ))}
               </div>
-            ) : products.length === 0 ? (
+            ) : (products && Array.isArray(products) ? products : []).length === 0 ? (
               <div className="bg-white rounded-lg shadow-md p-12 text-center">
                 <div className="text-6xl mb-4">🔍</div>
                 <h3 className="text-2xl font-bold text-gray-700 mb-2">No products found</h3>
@@ -424,7 +427,7 @@ const Marketplace = () => {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {products.map(product => (
+                  {(products && Array.isArray(products) ? products : []).map(product => (
                     <ProductCard 
                       key={product._id} 
                       product={product} 
