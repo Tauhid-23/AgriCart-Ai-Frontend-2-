@@ -35,6 +35,7 @@ import ComingSoonPage from "./pages/app/ComingSoonPage";
 // Marketplace Pages
 import Marketplace from "./pages/Marketplace";
 import MarketplaceTest from "./pages/MarketplaceTest";
+import MarketplaceMinimal from "./pages/MarketplaceMinimal";
 import ProductDetail from "./pages/ProductDetail";
 import ShoppingCart from "./pages/ShoppingCart";
 import CheckoutPage from "./pages/CheckoutPage";
@@ -66,6 +67,7 @@ function App() {
               {/* Public Marketplace Routes with conditional layout */}
               <Route path="/marketplace" element={<MarketplaceWithLayout />} />
               <Route path="/marketplace/test" element={<MarketplaceTest />} />
+              <Route path="/marketplace/minimal" element={<MarketplaceMinimal />} />
               <Route path="/marketplace/product/:productId" element={<ProductDetailWithLayout />} />
 
               {/* Auth Pages */}
