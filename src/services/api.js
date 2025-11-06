@@ -14,7 +14,7 @@ console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
 console.log('Final API_BASE_URL:', API_BASE_URL);
 console.log('================================================');
 
-// Create axios instance
+// Create axios instance with ultra-safe defaults
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -47,7 +47,7 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor
+// ULTRA-SAFE Response interceptor
 api.interceptors.response.use(
   (response) => {
     console.log('✅ Response:', response.status, response.config.url);
@@ -72,6 +72,42 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// ULTRA-SAFE marketplace API with error handling
+export const marketplaceAPI = {
+  getProducts: async (params = {}) => {
+    try {
+      console.log('🛒 Getting products with params:', params);
+      const response = await api.get('/marketplace/products', { params });
+      console.log('✅ Products response:', response);
+      
+      // ULTRA-SAFE: Validate response structure
+      if (!response || !response.data) {
+        console.log('⚠️ Empty response from products API');
+        return { success: true, products: [], pagination: { page: 1, limit: 0, total: 0, pages: 0 } };
+      }
+      
+      // Handle different response structures
+      if (response.data.success === true && Array.isArray(response.data.products)) {
+        return response.data;
+      } else if (Array.isArray(response.data)) {
+        return { success: true, products: response.data, pagination: { page: 1, limit: response.data.length, total: response.data.length, pages: 1 } };
+      } else if (response.data.products && Array.isArray(response.data.products)) {
+        return { success: true, products: response.data.products, pagination: response.data.pagination || { page: 1, limit: response.data.products.length, total: response.data.products.length, pages: 1 } };
+      } else {
+        console.log('⚠️ Unexpected response structure:', response.data);
+        return { success: true, products: [], pagination: { page: 1, limit: 0, total: 0, pages: 0 } };
+      }
+    } catch (error) {
+      console.error('❌ Error in marketplaceAPI.getProducts:', error);
+      // ULTRA-SAFE: Always return a valid structure
+      return { success: true, products: [], pagination: { page: 1, limit: 0, total: 0, pages: 0 }, error: error.message };
+    }
+  },
+  
+  getProduct: (id) => api.get(`/marketplace/products/${id}`),
+  searchProducts: (query) => api.get(`/marketplace/products/search?q=${query}`)
+};
 
 // Auth API
 export const authAPI = {
@@ -129,24 +165,6 @@ export const weatherAPI = {
     }
     return api.get(`/weather?lat=${lat}&lon=${lon}`);
   }
-};
-
-// Community API
-export const communityAPI = {
-  getPosts: (params) => api.get('/community/posts', { params }),
-  getPost: (id) => api.get(`/community/posts/${id}`),
-  createPost: (data) => api.post('/community/posts', data),
-  updatePost: (id, data) => api.put(`/community/posts/${id}`, data),
-  deletePost: (id) => api.delete(`/community/posts/${id}`),
-  likePost: (id) => api.put(`/community/posts/${id}/like`),
-  commentOnPost: (id, comment) => api.post(`/community/posts/${id}/comments`, { comment })
-};
-
-// Marketplace API
-export const marketplaceAPI = {
-  getProducts: (params) => api.get('/marketplace/products', { params }),
-  getProduct: (id) => api.get(`/marketplace/products/${id}`),
-  searchProducts: (query) => api.get(`/marketplace/products/search?q=${query}`)
 };
 
 // Quote API

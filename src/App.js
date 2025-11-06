@@ -48,12 +48,16 @@ import ShoppingCart from "./pages/ShoppingCart";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import OrdersPage from "./pages/OrdersPage";
+import MarketplaceErrorDebug from "./pages/MarketplaceErrorDebug";
+import MarketplaceTestSimple from "./pages/MarketplaceTestSimple";
 
 // Layout Components
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MarketplaceWithLayout from "./components/MarketplaceWithLayout";
 import ProductDetailWithLayout from "./components/ProductDetailWithLayout";
+
+import ApiTestPage from "./pages/ApiTestPage";
 
 function App() {
   return (
@@ -80,6 +84,9 @@ function App() {
               <Route path="/marketplace/debug" element={<MarketplaceDebug />} />
               <Route path="/marketplace/final" element={<MarketplaceFinal />} />
               <Route path="/marketplace/product/:productId" element={<ProductDetailWithLayout />} />
+              <Route path="/marketplace/error-debug" element={<MarketplaceErrorDebug />} />
+              <Route path="/marketplace/test-simple" element={<MarketplaceTestSimple />} />
+              <Route path="/api-test" element={<ApiTestPage />} />
 
               {/* Auth Pages */}
               <Route path="/login" element={<LoginPage />} />

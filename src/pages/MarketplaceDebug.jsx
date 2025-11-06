@@ -128,254 +128,102 @@ const ProductCard = ({ product, formatPrice }) => {
 };
 
 const MarketplaceDebug = () => {
-  console.log('=== MARKETPLACE DEBUG COMPONENT RENDER ===');
-  
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState(() => {
-    console.log('Initializing products state');
-    return [];
-  });
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState(() => {
-    console.log('Initializing pagination state');
-    return { page: 1, pages: 1, total: 0 };
-  });
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '');
-  const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '');
-  const [sortBy, setSortBy] = useState(searchParams.get('sort') || '-featured');
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Log state values
-  console.log('Current state values:');
-  console.log('- products:', products);
-  console.log('- products type:', typeof products);
-  console.log('- products is array:', Array.isArray(products));
-  console.log('- pagination:', pagination);
-  console.log('- pagination type:', typeof pagination);
-
-  // Safe variables with extensive logging
-  const safeProducts = (() => {
-    console.log('Computing safeProducts...');
-    const result = Array.isArray(products) ? products : [];
-    console.log('safeProducts result:', result);
-    return result;
-  })();
-  
-  const safePagination = (() => {
-    console.log('Computing safePagination...');
-    const result = pagination && typeof pagination === 'object' ? pagination : { page: 1, pages: 1, total: 0 };
-    console.log('safePagination result:', result);
-    return result;
-  })();
-
-  console.log('Safe variables computed:');
-  console.log('- safeProducts:', safeProducts);
-  console.log('- safePagination:', safePagination);
+  const [apiResponse, setApiResponse] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log('Categories effect running');
-    fetchCategories();
+    testMarketplaceAPI();
   }, []);
 
-  useEffect(() => {
-    console.log('Products effect running');
-    fetchProducts();
-  }, [selectedCategory, sortBy, searchParams]);
-
-  const fetchCategories = async () => {
-    try {
-      console.log('Fetching categories...');
-      const staticCategories = [
-        { _id: 'seeds', count: 20 },
-        { _id: 'seedlings', count: 15 },
-        { _id: 'pots-containers', count: 15 },
-        { _id: 'soil-amendments', count: 15 },
-        { _id: 'fertilizers', count: 10 },
-        { _id: 'tools-equipment', count: 10 },
-        { _id: 'pest-control', count: 8 },
-        { _id: 'watering-irrigation', count: 0 },
-        { _id: 'grow-lights', count: 0 },
-        { _id: 'accessories', count: 0 },
-        { _id: 'books-guides', count: 0 },
-        { _id: 'composting', count: 0 },
-        { _id: 'protective-gear', count: 0 }
-      ];
-      setCategories(staticCategories);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
-  const fetchProducts = async (page = 1) => {
-    console.log('Fetching products, page:', page);
+  const testMarketplaceAPI = async () => {
     setLoading(true);
+    setError(null);
+    setApiResponse(null);
+    
     try {
-      const params = { page, limit: 20, sortBy };
-      if (selectedCategory) params.category = selectedCategory;
-      if (searchQuery) params.search = searchQuery;
-      if (minPrice) params.minPrice = minPrice;
-      if (maxPrice) params.maxPrice = maxPrice;
-
-      console.log('API request params:', params);
-      const res = await axios.get('/api/marketplace/products', { params });
-      console.log('API response:', res);
+      console.log('🔍 Testing marketplace API...');
+      const response = await axios.get('/api/marketplace/products');
       
-      let productsData = [];
-      let paginationData = { page: 1, pages: 1, total: 0 };
+      console.log('📥 Raw API response:', response);
       
-      if (res && res.data) {
-        if (Array.isArray(res.data)) {
-          productsData = res.data;
-          paginationData = { page: 1, pages: 1, total: productsData.length };
-        } else if (res.data.products && Array.isArray(res.data.products)) {
-          productsData = res.data.products;
-          paginationData = {
-            page: res.data.pagination?.page || 1,
-            pages: res.data.pagination?.pages || 1,
-            total: res.data.pagination?.total || productsData.length,
-            limit: res.data.pagination?.limit || 20
-          };
-        }
-      }
-      
-      console.log('Setting products data:', productsData);
-      console.log('Setting pagination data:', paginationData);
-      
-      setProducts(productsData);
-      setPagination(paginationData);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setProducts([]);
-      setPagination({ page: 1, pages: 1, total: 0 });
+      setApiResponse({
+        status: response.status,
+        headers: response.headers,
+        data: response.data,
+        dataType: typeof response.data,
+        isArray: Array.isArray(response.data),
+        hasProducts: response.data && response.data.products ? true : false,
+        productsType: response.data && response.data.products ? typeof response.data.products : null,
+        productsIsArray: response.data && response.data.products ? Array.isArray(response.data.products) : null,
+        productsLength: response.data && response.data.products ? response.data.products.length : 0
+      });
+    } catch (err) {
+      console.error('❌ API Error:', err);
+      setError({
+        message: err.message,
+        response: err.response ? {
+          status: err.response.status,
+          data: err.response.data
+        } : null
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    updateURLParams();
-    fetchProducts(1);
-  };
-
-  const updateURLParams = () => {
-    const params = {};
-    if (selectedCategory) params.category = selectedCategory;
-    if (searchQuery) params.search = searchQuery;
-    if (minPrice) params.minPrice = minPrice;
-    if (maxPrice) params.maxPrice = maxPrice;
-    if (sortBy !== '-featured') params.sort = sortBy;
-    setSearchParams(params);
-  };
-
-  const clearFilters = () => {
-    setSelectedCategory('');
-    setSearchQuery('');
-    setMinPrice('');
-    setMaxPrice('');
-    setSortBy('-featured');
-    setSearchParams({});
-    fetchProducts(1);
-  };
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-BD', {
-      style: 'currency',
-      currency: 'BDT',
-      minimumFractionDigits: 0
-    }).format(price);
-  };
-
-  const getCategoryIcon = (category) => {
-    const icons = {
-      'seeds': '🌱', 'seedlings': '🌿', 'pots-containers': '🏺',
-      'soil-amendments': '🪴', 'fertilizers': '🧪', 'tools-equipment': '🛠️',
-      'pest-control': '🐛', 'watering-irrigation': '💧', 'grow-lights': '💡',
-      'accessories': '🎒', 'books-guides': '📚', 'composting': '♻️',
-      'protective-gear': '🧤'
-    };
-    return icons[category] || '📦';
-  };
-
-  // Test the exact line that's causing the error
-  console.log('=== TESTING CRITICAL LINES ===');
-  try {
-    console.log('Testing safeProducts.length:', safeProducts.length);
-  } catch (error) {
-    console.log('❌ Error accessing safeProducts.length:', error);
-  }
-  
-  try {
-    console.log('Testing safePagination.total:', safePagination.total);
-  } catch (error) {
-    console.log('❌ Error accessing safePagination.total:', error);
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">🛒 Marketplace API Debug</h1>
+          <p className="text-gray-600">Testing API response structure and data</p>
+        </div>
+
+        <div className="mb-6">
           <button 
-            onClick={() => navigate(-1)}
-            className="flex items-center text-green-100 hover:text-white mb-2"
+            onClick={testMarketplaceAPI}
+            disabled={loading}
+            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
           >
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Back
+            {loading ? 'Testing...' : 'Test Marketplace API'}
           </button>
-          <h1 className="text-4xl font-bold mb-2">🛒 Debug Marketplace</h1>
-          <p className="text-green-100">Debug version with extensive logging</p>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-700">
-                Showing <span className="font-semibold">{safeProducts.length}</span> of{' '}
-                <span className="font-semibold">{safePagination.total || 0}</span> products
-                {selectedCategory && (
-                  <span className="text-green-600 ml-2">
-                    in {selectedCategory.replace(/-/g, ' ')}
-                  </span>
-                )}
-              </p>
-            </div>
-            <div className="text-sm text-gray-500">
-              Page {safePagination.page || 1} of {safePagination.pages || 1}
-            </div>
-          </div>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading products...</p>
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-semibold text-red-800 mb-3">❌ Error</h2>
+            <pre className="bg-red-100 p-4 rounded overflow-auto text-sm">
+              {JSON.stringify(error, null, 2)}
+            </pre>
           </div>
-        ) : safeProducts.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-2xl font-bold text-gray-700 mb-2">No products found</h3>
-            <p className="text-gray-500 mb-6">Try adjusting your filters or search query</p>
-            <button onClick={clearFilters} className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">
-              Clear Filters
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {safeProducts.map(product => (
-              <ProductCard 
-                key={product._id} 
-                product={product} 
-                formatPrice={formatPrice}
-              />
-            ))}
+        )}
+
+        {apiResponse && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">✅ API Response Analysis</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="bg-blue-50 p-4 rounded">
+                <h3 className="font-semibold text-blue-800">Response Info</h3>
+                <p>Status: {apiResponse.status}</p>
+                <p>Data Type: {apiResponse.dataType}</p>
+                <p>Is Array: {apiResponse.isArray ? 'Yes' : 'No'}</p>
+              </div>
+              <div className="bg-purple-50 p-4 rounded">
+                <h3 className="font-semibold text-purple-800">Products Info</h3>
+                <p>Has Products: {apiResponse.hasProducts ? 'Yes' : 'No'}</p>
+                <p>Products Type: {apiResponse.productsType || 'N/A'}</p>
+                <p>Products Is Array: {apiResponse.productsIsArray ? 'Yes' : 'N/A'}</p>
+                <p>Products Count: {apiResponse.productsLength}</p>
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <h3 className="font-semibold mb-2">Full Response Data:</h3>
+              <pre className="bg-gray-100 p-4 rounded overflow-auto max-h-96 text-sm">
+                {JSON.stringify(apiResponse.data, null, 2)}
+              </pre>
+            </div>
           </div>
         )}
       </div>
