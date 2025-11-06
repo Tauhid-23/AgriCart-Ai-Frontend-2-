@@ -1,5 +1,6 @@
 // frontend/src/pages/Marketplace.jsx
-// Last updated: Fix undefined products array error with defensive checks - Force redeploy v3
+// FORCE REBUILD - Timestamp: 2025-11-06-22-15-00
+// Fix: Ultra-safe array handling with defensive checks v4
 
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
@@ -134,14 +135,17 @@ const ProductCard = ({ product, formatPrice }) => {
 };
 
 const Marketplace = () => {
+  // ✅ STATE DECLARATIONS FIRST (before any other code)
   const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]); // ✅ Empty array default
+  const [categories, setCategories] = useState([]); // ✅ Empty array default
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  
+  const [pagination, setPagination] = useState({ 
+    page: 1, 
+    pages: 1, 
+    total: 0,
+    limit: 20 
+  }); // ✅ Full object default
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '');
@@ -149,15 +153,39 @@ const Marketplace = () => {
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || '-featured');
   const [showFilters, setShowFilters] = useState(false);
 
-  // ✅ CREATE SAFE VARIABLES AT THE TOP
-  const safeProducts = Array.isArray(products) ? products : [];
-  const safePagination = pagination && typeof pagination === 'object' ? pagination : { page: 1, pages: 1, total: 0 };
+  // ✅ THEN navigate and auth hooks
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
+  // ✅ THEN create safe variables
+  const safeProducts = Array.isArray(products) ? products : [];
+  const safePagination = pagination && typeof pagination === 'object' 
+    ? { 
+        page: pagination.page || 1,
+        pages: pagination.pages || 1,
+        total: pagination.total || 0,
+        limit: pagination.limit || 20
+      }
+    : { page: 1, pages: 1, total: 0, limit: 20 };
+
+  // ✅ DEBUG LOG
+  console.log('🔄 Marketplace Component Loaded - Version 4.0');
+  console.log('📦 Products state:', products);
+  console.log('📊 Pagination state:', pagination);
+  console.log('🛡️ Safe products:', Array.isArray(products) ? 'ARRAY' : typeof products);
+  
+  console.log('🔄 Marketplace Render');
+  console.log('  Products:', safeProducts.length, 'items');
+  console.log('  Pagination:', safePagination);
+
+  // ✅ THEN useEffect hooks
   useEffect(() => {
+    console.log('🎯 useEffect: Fetch categories');
     fetchCategories();
   }, []);
 
   useEffect(() => {
+    console.log('🎯 useEffect: Fetch products');
     fetchProducts();
   }, [selectedCategory, sortBy, searchParams]);
 
@@ -198,7 +226,7 @@ const Marketplace = () => {
       
       // More defensive check to ensure products is always an array
       let productsData = [];
-      let paginationData = { page: 1, pages: 1, total: 0 }; // ✅ Default pagination
+      let paginationData = { page: 1, pages: 1, total: 0, limit: 20 }; // ✅ Default pagination
       
       if (res && res.data) {
         if (Array.isArray(res.data)) {
@@ -221,7 +249,7 @@ const Marketplace = () => {
       console.error('Error fetching products:', error);
       // Set products to empty array and reset pagination on error
       setProducts([]);
-      setPagination({ page: 1, pages: 1, total: 0 }); // ✅ Reset pagination on error
+      setPagination({ page: 1, pages: 1, total: 0, limit: 20 }); // ✅ Reset pagination on error
     } finally {
       setLoading(false);
     }
@@ -409,13 +437,30 @@ const Marketplace = () => {
 
           {/* Product Grid */}
           <div className="flex-1">
-            {/* Results Header - ULTRA SAFE VERSION */}
+            {/* Results Header - ULTRA SAFE VERSION V2 */}
             <div className="bg-white rounded-lg shadow-md p-4 mb-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-700">
-                    Showing <span className="font-semibold">{safeProducts.length}</span> of{' '}
-                    <span className="font-semibold">{safePagination.total || 0}</span> products
+                    Showing{' '}
+                    {(() => {
+                      try {
+                        return Array.isArray(products) ? products.length : 0;
+                      } catch (e) {
+                        console.error('Error accessing products.length:', e);
+                        return 0;
+                      }
+                    })()}
+                    {' '}of{' '}
+                    {(() => {
+                      try {
+                        return (pagination && pagination.total) ? pagination.total : 0;
+                      } catch (e) {
+                        console.error('Error accessing pagination.total:', e);
+                        return 0;
+                      }
+                    })()}
+                    {' '}products
                     {selectedCategory && (
                       <span className="text-green-600 ml-2">
                         in {selectedCategory.replace(/-/g, ' ')}
@@ -424,7 +469,22 @@ const Marketplace = () => {
                   </p>
                 </div>
                 <div className="text-sm text-gray-500">
-                  Page {safePagination.page || 1} of {safePagination.pages || 1}
+                  Page{' '}
+                  {(() => {
+                    try {
+                      return (pagination && pagination.page) ? pagination.page : 1;
+                    } catch (e) {
+                      return 1;
+                    }
+                  })()}
+                  {' '}of{' '}
+                  {(() => {
+                    try {
+                      return (pagination && pagination.pages) ? pagination.pages : 1;
+                    } catch (e) {
+                      return 1;
+                    }
+                  })()}
                 </div>
               </div>
             </div>
