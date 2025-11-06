@@ -434,25 +434,25 @@ const Marketplace = () => {
                 </div>
 
                 {/* Pagination */}
-                {pagination.pages > 1 && (
+                {(pagination.pages || 0) > 1 && (
                   <div className="flex justify-center mt-8">
                     <nav className="flex items-center gap-2">
                       <button
-                        onClick={() => fetchProducts(pagination.page - 1)}
-                        disabled={pagination.page <= 1}
+                        onClick={() => fetchProducts((pagination.page || 1) - 1)}
+                        disabled={(pagination.page || 1) <= 1}
                         className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                       >
                         Previous
                       </button>
                       
-                      {[...Array(pagination.pages)].map((_, i) => {
+                      {[...Array(Math.max(0, pagination.pages || 0))].map((_, i) => {
                         const page = i + 1;
                         return (
                           <button
                             key={page}
                             onClick={() => fetchProducts(page)}
                             className={`px-4 py-2 rounded-lg ${
-                              page === pagination.page
+                              page === (pagination.page || 1)
                                 ? 'bg-green-600 text-white'
                                 : 'border border-gray-300 hover:bg-gray-50'
                             }`}
@@ -463,8 +463,8 @@ const Marketplace = () => {
                       })}
                       
                       <button
-                        onClick={() => fetchProducts(pagination.page + 1)}
-                        disabled={pagination.page >= pagination.pages}
+                        onClick={() => fetchProducts((pagination.page || 1) + 1)}
+                        disabled={(pagination.page || 1) >= (pagination.pages || 1)}
                         className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                       >
                         Next
@@ -472,6 +472,7 @@ const Marketplace = () => {
                     </nav>
                   </div>
                 )}
+
               </>
             )}
           </div>
