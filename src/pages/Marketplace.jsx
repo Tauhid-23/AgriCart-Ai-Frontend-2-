@@ -269,6 +269,16 @@ const Marketplace = () => {
     }
   };
 
+  // Add a helper function to safely get pagination data
+  const getSafePagination = () => {
+    try {
+      return pagination || {};
+    } catch (error) {
+      console.error('Error accessing pagination data:', error);
+      return {};
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       {/* Back Button and Hero Section */}
@@ -406,13 +416,13 @@ const Marketplace = () => {
 
           {/* Product Grid */}
           <div className="flex-1">
-            {/* Results Header */}
+            {/* Results Header - Updated with safe pagination access */}
             <div className="bg-white rounded-lg shadow-md p-4 mb-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-700">
                     Showing <span className="font-semibold">{getSafeProducts().length}</span> of{' '}
-                    <span className="font-semibold">{pagination.total || 0}</span> products
+                    <span className="font-semibold">{getSafePagination().total || 0}</span> products
                     {selectedCategory && (
                       <span className="text-green-600 ml-2">
                         in {selectedCategory.replace(/-/g, ' ')}
@@ -421,7 +431,7 @@ const Marketplace = () => {
                   </p>
                 </div>
                 <div className="text-sm text-gray-500">
-                  Page {pagination.page || 1} of {pagination.pages || 1}
+                  Page {getSafePagination().page || 1} of {getSafePagination().pages || 1}
                 </div>
               </div>
             </div>
@@ -459,26 +469,26 @@ const Marketplace = () => {
                   ))}
                 </div>
 
-                {/* Pagination */}
-                {(pagination.pages || 0) > 1 && (
+                {/* Pagination - Updated with safe pagination access */}
+                {(getSafePagination().pages || 0) > 1 && (
                   <div className="flex justify-center mt-8">
                     <nav className="flex items-center gap-2">
                       <button
-                        onClick={() => fetchProducts((pagination.page || 1) - 1)}
-                        disabled={(pagination.page || 1) <= 1}
+                        onClick={() => fetchProducts((getSafePagination().page || 1) - 1)}
+                        disabled={(getSafePagination().page || 1) <= 1}
                         className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                       >
                         Previous
                       </button>
                       
-                      {[...Array(Math.max(0, pagination.pages || 0))].map((_, i) => {
+                      {[...Array(Math.max(0, getSafePagination().pages || 0))].map((_, i) => {
                         const page = i + 1;
                         return (
                           <button
                             key={page}
                             onClick={() => fetchProducts(page)}
                             className={`px-4 py-2 rounded-lg ${
-                              page === (pagination.page || 1)
+                              page === (getSafePagination().page || 1)
                                 ? 'bg-green-600 text-white'
                                 : 'border border-gray-300 hover:bg-gray-50'
                             }`}
@@ -489,8 +499,8 @@ const Marketplace = () => {
                       })}
                       
                       <button
-                        onClick={() => fetchProducts((pagination.page || 1) + 1)}
-                        disabled={(pagination.page || 1) >= (pagination.pages || 1)}
+                        onClick={() => fetchProducts((getSafePagination().page || 1) + 1)}
+                        disabled={(getSafePagination().page || 1) >= (getSafePagination().pages || 1)}
                         className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                       >
                         Next
