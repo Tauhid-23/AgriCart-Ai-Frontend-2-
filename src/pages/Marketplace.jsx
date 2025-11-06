@@ -1,4 +1,6 @@
 // frontend/src/pages/Marketplace.jsx
+// Last updated: Fix undefined products array error with defensive checks
+
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
