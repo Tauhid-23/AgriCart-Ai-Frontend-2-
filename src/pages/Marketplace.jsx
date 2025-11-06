@@ -388,7 +388,7 @@ const Marketplace = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-700">
-                    Showing <span className="font-semibold">{products.length}</span> of{' '}
+                    Showing <span className="font-semibold">{(products && Array.isArray(products) ? products : []).length}</span> of{' '}
                     <span className="font-semibold">{pagination.total || 0}</span> products
                     {selectedCategory && (
                       <span className="text-green-600 ml-2">
