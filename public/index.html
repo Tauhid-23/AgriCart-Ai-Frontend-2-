@@ -39,6 +39,20 @@
     -->
         
         <script>
+            // Handle redirect from 404.html
+            (function() {
+                var redirectPath = sessionStorage.getItem('redirectPath');
+                if (redirectPath) {
+                    sessionStorage.removeItem('redirectPath');
+                    // Use history.replaceState to update the URL without a page reload
+                    if (window.history && window.history.replaceState) {
+                        window.history.replaceState(null, null, redirectPath);
+                    }
+                }
+            })();
+        </script>
+        
+        <script>
             !(function (t, e) {
                 var o, n, p, r;
                 e.__SV ||

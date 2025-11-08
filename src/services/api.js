@@ -105,7 +105,37 @@ export const marketplaceAPI = {
     }
   },
   
-  getProduct: (id) => api.get(`/marketplace/products/${id}`),
+  getProduct: async (id) => {
+    try {
+      console.log('🔍 Getting product with ID:', id);
+      const response = await api.get(`/marketplace/products/${id}`);
+      console.log('✅ Product response:', response);
+      
+      // ULTRA-SAFE: Validate response structure
+      if (!response || !response.data) {
+        console.log('⚠️ Empty response from product API');
+        throw new Error('Product not found');
+      }
+      
+      // Handle different response structures
+      if (response.data.success === false) {
+        throw new Error(response.data.message || 'Product not found');
+      }
+      
+      if (response.data.success === true && response.data.product) {
+        return response;
+      } else if (response.data._id) {
+        // Direct product object
+        return { data: { success: true, product: response.data } };
+      } else {
+        console.log('⚠️ Unexpected response structure:', response.data);
+        throw new Error('Invalid product data structure');
+      }
+    } catch (error) {
+      console.error('❌ Error in marketplaceAPI.getProduct:', error);
+      throw error; // Re-throw the error so it can be handled by the calling component
+    }
+  },
   searchProducts: (query) => api.get(`/marketplace/products/search?q=${query}`),
   getFeaturedProducts: () => api.get('/marketplace/products/featured'),
   getProductsByCategory: (category) => api.get(`/marketplace/products/category/${category}`),

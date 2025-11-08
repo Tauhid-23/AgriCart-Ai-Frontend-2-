@@ -6,6 +6,14 @@
   "framework": null,
   "rewrites": [
     {
+      "source": "/marketplace/product/:productId",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/marketplace/:path*",
+      "destination": "/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

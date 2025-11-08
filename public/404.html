@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>AgriCart AI</title>
+    <script>
+      // Redirect to the index.html page with the correct path
+      sessionStorage.setItem('redirectPath', location.pathname + location.search + location.hash);
+      location.replace('/' + location.search + location.hash);
+    </script>
+  </head>
+  <body>
+    <!-- This page will be replaced immediately by the redirect script -->
+  </body>
+</html>
