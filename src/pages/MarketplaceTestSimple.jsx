@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { marketplaceAPI } from '../services/api';
 
 const MarketplaceTestSimple = () => {
   const [products, setProducts] = useState([]);
@@ -10,7 +10,7 @@ const MarketplaceTestSimple = () => {
     const fetchProducts = async () => {
       try {
         console.log('🔍 Fetching products...');
-        const response = await axios.get('/api/marketplace/products');
+        const response = await marketplaceAPI.getProducts();
         console.log('📥 Response:', response);
         
         // Log the exact structure

@@ -1,7 +1,7 @@
 // Minimal test version of Marketplace to isolate the error
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { marketplaceAPI } from '../services/api';
 
 const MarketplaceTest = () => {
   const [products, setProducts] = useState([]);
@@ -25,7 +25,7 @@ const MarketplaceTest = () => {
       console.log('Fetching products...');
       console.log('API Base URL:', process.env.REACT_APP_API_URL || '/api');
       
-      const res = await axios.get('/api/marketplace/products');
+      const res = await marketplaceAPI.getProducts();
       console.log('API Response:', res);
       
       // Log the exact structure we're getting

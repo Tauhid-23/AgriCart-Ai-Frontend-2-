@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { marketplaceAPI } from '../services/api';
 
 const MarketplaceErrorDebug = () => {
   const [debugInfo, setDebugInfo] = useState({
@@ -17,7 +17,7 @@ const MarketplaceErrorDebug = () => {
     
     try {
       console.log('🔍 Testing API call to /api/marketplace/products');
-      const response = await axios.get('/api/marketplace/products');
+      const response = await marketplaceAPI.getProducts();
       console.log('📥 Raw response:', response);
       
       // Check what we received

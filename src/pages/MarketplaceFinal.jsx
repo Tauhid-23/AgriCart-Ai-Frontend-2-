@@ -1,7 +1,7 @@
 // Final ultra-defensive version of Marketplace
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { marketplaceAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { Plus, ArrowLeft } from 'lucide-react';
@@ -330,7 +330,7 @@ const MarketplaceFinal = () => {
         if (minPrice) params.minPrice = minPrice;
         if (maxPrice) params.maxPrice = maxPrice;
 
-        const res = await axios.get('/api/marketplace/products', { params });
+        const res = await marketplaceAPI.getProducts(params);
         
         let productsData = [];
         let paginationData = { page: 1, pages: 1, total: 0 };

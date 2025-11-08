@@ -1,7 +1,7 @@
 // frontend/src/pages/CheckoutPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { marketplaceAPI } from '../services/api';
 import { ArrowLeft, ShoppingCart, Truck, CreditCard, MapPin, User, X } from 'lucide-react';
 
 const CheckoutPage = () => {
@@ -33,7 +33,7 @@ const CheckoutPage = () => {
 
   const fetchCartItems = async () => {
     try {
-      const res = await axios.get('/api/marketplace/cart');
+      const res = await marketplaceAPI.getCart();
       setCartItems(res.data.items || []);
     } catch (error) {
       console.error('Error fetching cart items:', error);
@@ -111,10 +111,10 @@ const CheckoutPage = () => {
         totalAmount: calculateTotal()
       };
       
-      const res = await axios.post('/api/marketplace/orders', orderData);
+      const res = await marketplaceAPI.createOrder(orderData);
       
       // Clear cart after successful order
-      await axios.delete('/api/marketplace/cart');
+      await marketplaceAPI.clearCart();
       
       // Redirect to order confirmation
       navigate('/marketplace/orders', { 

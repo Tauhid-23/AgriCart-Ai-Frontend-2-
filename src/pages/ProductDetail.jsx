@@ -1,7 +1,7 @@
 // frontend/src/pages/ProductDetail.jsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { marketplaceAPI } from '../services/api'; // Import the API service
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { ArrowLeft, ShoppingCart, Plus, Minus, X } from 'lucide-react';
@@ -20,8 +20,9 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`/api/marketplace/products/${productId}`);
-        setProduct(res.data.product);
+        // Use the marketplaceAPI service instead of direct axios call
+        const response = await marketplaceAPI.getProduct(productId);
+        setProduct(response.data.product);
       } catch (error) {
         console.error('Error fetching product:', error);
       } finally {

@@ -1,7 +1,7 @@
 // Debug version of Marketplace with extensive logging
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { marketplaceAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { Plus, ArrowLeft } from 'lucide-react';
@@ -143,7 +143,7 @@ const MarketplaceDebug = () => {
     
     try {
       console.log('🔍 Testing marketplace API...');
-      const response = await axios.get('/api/marketplace/products');
+      const response = await marketplaceAPI.getProducts();
       
       console.log('📥 Raw API response:', response);
       

@@ -1,7 +1,7 @@
 // frontend/src/pages/OrdersPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { marketplaceAPI } from '../services/api';
 import { ArrowLeft, Package, Calendar, CreditCard, X } from 'lucide-react';
 
 const OrdersPage = () => {
@@ -16,7 +16,7 @@ const OrdersPage = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get('/api/marketplace/orders');
+      const res = await marketplaceAPI.getUserOrders();
       setOrders(res.data.orders || []);
     } catch (error) {
       console.error('Error fetching orders:', error);

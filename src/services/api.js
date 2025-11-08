@@ -106,7 +106,18 @@ export const marketplaceAPI = {
   },
   
   getProduct: (id) => api.get(`/marketplace/products/${id}`),
-  searchProducts: (query) => api.get(`/marketplace/products/search?q=${query}`)
+  searchProducts: (query) => api.get(`/marketplace/products/search?q=${query}`),
+  getFeaturedProducts: () => api.get('/marketplace/products/featured'),
+  getProductsByCategory: (category) => api.get(`/marketplace/products/category/${category}`),
+  getCart: () => api.get('/marketplace/cart'),
+  addToCart: (productId, quantity) => api.post('/marketplace/cart/add', { productId, quantity }),
+  updateCartItem: (itemId, quantity) => api.put(`/marketplace/cart/update/${itemId}`, { quantity }),
+  removeFromCart: (itemId) => api.delete(`/marketplace/cart/remove/${itemId}`),
+  clearCart: () => api.delete('/marketplace/cart/clear'),
+  createOrder: (orderData) => api.post('/marketplace/orders', orderData),
+  getUserOrders: () => api.get('/marketplace/orders'),
+  getOrderById: (id) => api.get(`/marketplace/orders/${id}`),
+  cancelOrder: (id) => api.put(`/marketplace/orders/${id}/cancel`)
 };
 
 // Auth API
