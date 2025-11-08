@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Plus, Camera, Upload, CheckCircle, Loader2, ShoppingCart, X, Lock, Phone, Mail, MapPin, AlertCircle, Sprout, Sun, Droplets, Home, TreePine, Calendar, Thermometer, MapPinIcon } from 'lucide-react';
-import { plantDatabaseAPI, plantAPI, quoteAPI } from '../../services/api';
+import { plantAPI, quoteAPI } from '../../services/api';
+import api from '../../services/api';
 import { lazyLoadImage, cleanupObjectUrl } from '../../services/imageOptimizer';
 import { useAuth } from '../../context/AuthContext';
 
@@ -488,7 +489,7 @@ const PlantDatabase = () => {
         setLoading(true);
         
         // Fetch all plants
-        const response = await plantDatabaseAPI.getAll();
+        const response = await api.get('/plant-database');
         let fetchedPlants = Array.isArray(response.data.plants) ? response.data.plants : [];
         
         // If no plants from API, use common Bangladesh plants
@@ -783,7 +784,7 @@ const PlantDatabase = () => {
         console.log('🚀 Sending to API...');
         // Extract base64 from data URL
         const base64Image = compressedBase64.split(',')[1];
-        const response = await plantDatabaseAPI.identifyPlant(base64Image);
+        const response = await api.post('/diagnosis/identify', { imageBase64: base64Image });
 
         console.log('📥 API Response:', response.data);
 
@@ -1053,7 +1054,7 @@ const PlantDatabase = () => {
       console.log('🚀 Sending to API...');
       // Extract base64 from data URL
       const base64Image = uploadedImage.split(',')[1];
-      const response = await plantDatabaseAPI.identifyPlant(base64Image);
+      const response = await api.post('/diagnosis/identify', { imageBase64: base64Image });
       
       console.log('📥 API Response:', response.data);
       

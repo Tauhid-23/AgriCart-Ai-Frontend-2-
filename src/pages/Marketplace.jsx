@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { marketplaceAPI } from '../services/api';
 
 // ULTRA SAFE HELPER FUNCTIONS
 const isSafeArray = (item) => {
@@ -70,36 +70,43 @@ const extractProductsSafely = (data) => {
 const Marketplace = () => {
   console.log('🏪 ULTRA-SAFE Marketplace component mounting...');
   
-  const [products, setProducts] = useState([]);
+  // Ensure products state is initialized as an empty array
+  const [products, setProducts] = useState([]); // Default to an empty array
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log('🎯 useEffect triggered');
-    fetchProducts();
-  }, []);
-
+  // Handle API Response Safely
   const fetchProducts = async () => {
     console.log('📡 Starting ultra-safe fetchProducts...');
     setLoading(true);
     setError(null);
     
     try {
-      console.log('📤 Making API call to /api/marketplace/products');
-      const response = await axios.get('/api/marketplace/products');
+      console.log('📤 Making API call to marketplaceAPI.getProducts()');
+      const response = await marketplaceAPI.getProducts();
       console.log('📥 Raw API response:', response);
       
-      if (!response || !response.data) {
+      if (!response || !response.products) {
         console.log('⚠️ Empty response received');
         setProducts([]);
         return;
       }
       
-      const safeProducts = extractProductsSafely(response.data);
+      // Ensure products key in the response is an array
+      const safeProducts = extractProductsSafely(response.products);
       console.log('📦 Safe products extracted:', safeProducts);
       
-      setProducts(safeProducts);
+      // Log specific information about the Premium Plastic Pot
+      const premiumPot = safeProducts.find(product => 
+        product.name && product.name.includes('Premium Plastic Planting Pot')
+      );
+      
+      if (premiumPot) {
+        console.log('🎯 Premium Plastic Pot product data:', JSON.stringify(premiumPot, null, 2));
+      }
+      
+      setProducts(safeProducts || []); // Ensure products is an array
       console.log('✅ Products state updated safely');
       
     } catch (err) {
@@ -114,6 +121,11 @@ const Marketplace = () => {
     }
   };
 
+  useEffect(() => {
+    console.log('🎯 useEffect triggered');
+    fetchProducts();
+  }, []);
+
   // ULTRA SAFE RENDERING
   console.log('🎨 Rendering Marketplace...');
   console.log('   products:', products);
@@ -122,7 +134,7 @@ const Marketplace = () => {
   const productCount = getSafeLength(products);
   console.log('📊 Safe product count:', productCount);
 
-  // ULTRA SAFE PRODUCT RENDERER
+  // ULTRA SAFE PRODUCT RENDERER with improved image handling
   const renderProduct = (product, index) => {
     try {
       if (!product) {
@@ -133,14 +145,21 @@ const Marketplace = () => {
       const key = product._id || product.id || `product-${index}`;
       console.log('🔧 Rendering product with key:', key);
       
+      // Fix Image Handling - Check if product.images is an array and has items
+      const imageSrc = Array.isArray(product.images) && product.images.length > 0
+        ? product.images[0]
+        : product.thumbnail || '/placeholder.jpg';
+      
+      console.log('🖼️ Final image source for product', product.name, ':', imageSrc);
+      
       return (
         <div key={key} className="bg-white rounded-lg shadow-md p-4">
           <img 
-            src={product.images?.[0] || product.image || '/placeholder.jpg'} 
+            src={imageSrc}
             alt={product.name || 'Product'}
             className="w-full h-48 object-cover rounded-lg mb-4"
             onError={(e) => { 
-              console.log('⚠️ Image load error for product:', key);
+              console.log('⚠️ Image load error for product:', product.name, 'key:', key, 'src:', imageSrc);
               e.target.src = '/placeholder.jpg'; 
             }}
           />
@@ -185,28 +204,15 @@ const Marketplace = () => {
             ← Back
           </button>
           <h1 className="text-4xl font-bold text-gray-900">
-            🛒 ULTRA-SAFE Marketplace
+            Marketplace
           </h1>
-        </div>
-
-        {/* Debug Info */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
-          <p className="font-semibold text-yellow-800 mb-2">🐛 ULTRA-SAFE Debug Info:</p>
-          <pre className="text-xs text-yellow-700 overflow-auto">
-{`Loading: ${loading}
-Error: ${error || 'none'}
-Products type: ${typeof products}
-Products isSafeArray: ${isSafeArray(products)}
-Products count: ${productCount}
-Products value: ${JSON.stringify(products, null, 2).substring(0, 200)}...`}
-          </pre>
         </div>
 
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading products safely...</p>
+            <p className="text-gray-600">Loading products...</p>
           </div>
         )}
 
@@ -232,19 +238,8 @@ Products value: ${JSON.stringify(products, null, 2).substring(0, 200)}...`}
               Showing <span className="font-semibold">{productCount}</span> products
             </p>
 
-            {productCount === 0 ? (
-              <div className="bg-white rounded-lg shadow p-12 text-center">
-                <div className="text-gray-400 text-6xl mb-4">📦</div>
-                <h3 className="text-2xl font-bold text-gray-700 mb-2">No Products Found</h3>
-                <p className="text-gray-500">Check back soon for new products!</p>
-                <button
-                  onClick={fetchProducts}
-                  className="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700"
-                >
-                  Refresh
-                </button>
-              </div>
-            ) : (
+            {/* Check Length Before Mapping Through products */}
+            {productCount > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {isSafeArray(products) && products.map((product, index) => {
                   try {
@@ -258,6 +253,19 @@ Products value: ${JSON.stringify(products, null, 2).substring(0, 200)}...`}
                     );
                   }
                 })}
+              </div>
+            ) : (
+              // Fallback when no products are available
+              <div className="bg-white rounded-lg shadow p-12 text-center">
+                <div className="text-gray-400 text-6xl mb-4">📦</div>
+                <h3 className="text-2xl font-bold text-gray-700 mb-2">No Products Found</h3>
+                <p className="text-gray-500">Check back soon for new products!</p>
+                <button
+                  onClick={fetchProducts}
+                  className="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700"
+                >
+                  Refresh
+                </button>
               </div>
             )}
           </div>

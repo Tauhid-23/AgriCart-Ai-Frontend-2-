@@ -71,7 +71,7 @@ const GrowthTracking = () => {
         photo: formData.photo
       };
       
-      const response = await plantAPI.addGrowthTracking(selectedPlant._id, growthData);
+      const response = await api.post(`/plants/${selectedPlant._id}/growth-tracking`, growthData);
       
       // Update the selected plant with the new growth tracking entry
       const updatedPlant = response.data.plant;
