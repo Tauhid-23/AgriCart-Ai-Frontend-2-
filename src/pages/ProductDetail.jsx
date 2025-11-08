@@ -141,7 +141,7 @@ const ProductDetail = () => {
     );
   }
 
-  // Product loaded successfully
+  // Product detail page
   return (
     <div style={{
       minHeight: '100vh',
