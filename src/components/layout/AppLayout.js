@@ -181,6 +181,7 @@ const AppLayout = ({ children }) => {
           <button
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden text-white hover:text-green-300"
+            aria-label="Close sidebar"
           >
             <X className="h-6 w-6" />
           </button>
@@ -238,6 +239,7 @@ const AppLayout = ({ children }) => {
               <button
                 onClick={() => setSidebarOpen(true)}
                 className="lg:hidden text-gray-500 hover:text-gray-700"
+                aria-label="Open menu"
               >
                 <Menu className="h-6 w-6" />
               </button>
@@ -263,6 +265,7 @@ const AppLayout = ({ children }) => {
                 <button
                   onClick={() => handleNavigate('/marketplace/cart')}
                   className="relative p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+                  aria-label={`Shopping cart with ${getCartCount()} items`}
                 >
                   <ShoppingCart className="h-5 w-5" />
                   {getCartCount() > 0 && (
@@ -277,6 +280,7 @@ const AppLayout = ({ children }) => {
               <button
                 onClick={() => setDarkMode(!darkMode)}
                 className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+                aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
               >
                 {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
@@ -286,6 +290,8 @@ const AppLayout = ({ children }) => {
                 <button
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
                   className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 relative"
+                  aria-label={`Notifications (${unreadNotifications} unread)`}
+                  aria-expanded={notificationsOpen}
                 >
                   <Bell className="h-5 w-5" />
                   {unreadNotifications > 0 && (
@@ -339,6 +345,7 @@ const AppLayout = ({ children }) => {
                 <button
                   onClick={() => handleNavigate('/settings')}
                   className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center text-green-800 hover:bg-green-200 transition-colors"
+                  aria-label="User profile settings"
                 >
                   <User className="h-5 w-5" />
                 </button>

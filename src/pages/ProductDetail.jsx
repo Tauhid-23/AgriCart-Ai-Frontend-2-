@@ -56,9 +56,11 @@ const ProductDetail = () => {
     setError(null);
     
     try {
-      const url = `/api/marketplace/products/${productId}`;
+      // Use the correct API URL based on environment
+      const apiUrl = process.env.REACT_APP_API_URL || '/api';
+      const url = `${apiUrl}/marketplace/products/${productId}`;
       console.log('📤 Making request to:', url);
-      console.log('   Full URL:', window.location.origin + url);
+      console.log('   API Base URL:', apiUrl);
       
       const response = await axios.get(url);
       
