@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 
 const ProductDetail = () => {
+  console.log('app/ProductDetail.js component loaded - This is the app version');
   const { productId } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);

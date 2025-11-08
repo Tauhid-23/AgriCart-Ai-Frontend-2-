@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 
 const ProductDetail = () => {
-  console.log('ProductDetail component loaded');
+  console.log('ProductDetail.jsx component loaded - This is the main product detail page');
   const { productId } = useParams();
   const navigate = useNavigate();
   
