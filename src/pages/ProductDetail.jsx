@@ -7,16 +7,16 @@ const ProductDetail = () => {
   console.log('🔍 PRODUCT DETAIL PAGE LOADED');
   console.log('========================================');
   
-  const { id } = useParams();
+  const { productId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   
   console.log('📍 Location:', location);
   console.log('📍 Pathname:', location.pathname);
   console.log('📍 useParams result:', useParams());
-  console.log('📍 Product ID from useParams:', id);
-  console.log('📍 Type of ID:', typeof id);
-  console.log('📍 ID is valid?', id && id !== 'undefined' && id !== 'null');
+  console.log('📍 Product ID from useParams:', productId);
+  console.log('📍 Type of ID:', typeof productId);
+  console.log('📍 ID is valid?', productId && productId !== 'undefined' && productId !== 'null');
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,20 +25,20 @@ const ProductDetail = () => {
 
   useEffect(() => {
     console.log('🎯 useEffect triggered');
-    console.log('   ID value:', id);
+    console.log('   Product ID value:', productId);
     
     const info = {
       pathname: location.pathname,
-      id: id,
-      idType: typeof id,
-      idValid: Boolean(id),
+      id: productId,
+      idType: typeof productId,
+      idValid: Boolean(productId),
       timestamp: new Date().toISOString()
     };
     
     setDebugInfo(info);
     console.log('🔧 Debug info set:', info);
     
-    if (!id || id === 'undefined' || id === 'null') {
+    if (!productId || productId === 'undefined' || productId === 'null') {
       console.error('❌ Invalid product ID');
       setError('Invalid product ID');
       setLoading(false);
@@ -46,17 +46,17 @@ const ProductDetail = () => {
     }
     
     fetchProduct();
-  }, [id]);
+  }, [productId]);
 
   const fetchProduct = async () => {
     console.log('📡 Starting fetchProduct...');
-    console.log('   Using ID:', id);
+    console.log('   Using Product ID:', productId);
     
     setLoading(true);
     setError(null);
     
     try {
-      const url = `/api/marketplace/products/${id}`;
+      const url = `/api/marketplace/products/${productId}`;
       console.log('📤 Making request to:', url);
       console.log('   Full URL:', window.location.origin + url);
       
@@ -137,8 +137,8 @@ const ProductDetail = () => {
     }}>
       <h3 style={{ margin: '0 0 10px 0', color: '#10b981' }}>🔧 DIAGNOSTIC PANEL</h3>
       <div>URL: {location.pathname}</div>
-      <div>Product ID: {id || 'NONE'}</div>
-      <div>ID Valid: {id ? '✅' : '❌'}</div>
+      <div>Product ID: {productId || 'NONE'}</div>
+      <div>ID Valid: {productId ? '✅' : '❌'}</div>
       <div>Loading: {loading ? '⏳' : '✅'}</div>
       <div>Error: {error || 'None'}</div>
       <div>Product Loaded: {product ? '✅ ' + product.name : '❌'}</div>
@@ -146,7 +146,7 @@ const ProductDetail = () => {
       <button
         onClick={() => {
           console.log('Full state dump:');
-          console.log({ id, loading, error, product, debugInfo });
+          console.log({ productId, loading, error, product, debugInfo });
         }}
         style={{
           marginTop: '10px',
@@ -184,7 +184,7 @@ const ProductDetail = () => {
             marginBottom: '20px'
           }}></div>
           <h2 style={{ color: '#374151', marginBottom: '10px' }}>Loading product...</h2>
-          <p style={{ color: '#6b7280' }}>Product ID: {id}</p>
+          <p style={{ color: '#6b7280' }}>Product ID: {productId}</p>
         </div>
         <DiagnosticPanel />
         <style>{`@keyframes spin { to { transform: rotate(360deg); }}`}</style>
@@ -238,7 +238,7 @@ const ProductDetail = () => {
               }}>Debug Info:</h3>
               <div style={{ color: '#6b7280', fontSize: '14px' }}>
                 <div>URL: {location.pathname}</div>
-                <div>Product ID: {id || 'MISSING'}</div>
+                <div>Product ID: {productId || 'MISSING'}</div>
                 <div>Error: {error}</div>
               </div>
             </div>
