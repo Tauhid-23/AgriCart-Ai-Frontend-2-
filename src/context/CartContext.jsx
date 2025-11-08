@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api';
+import api, { marketplaceAPI } from '../services/api';
 import { useAuth } from './AuthContext';
 
 // Create Cart Context
@@ -35,7 +35,7 @@ export const CartProvider = ({ children }) => {
     try {
       setLoading(true);
       console.log('🛒 Fetching cart items...');
-      const res = await api.get('/marketplace/cart');
+      const res = await marketplaceAPI.getCart();
       console.log('✅ Cart items fetched:', res.data);
       
       // Handle both possible response structures
@@ -69,10 +69,7 @@ export const CartProvider = ({ children }) => {
 
     try {
       console.log('📤 Adding to cart:', { productId, quantity });
-      const res = await api.post('/marketplace/cart/add', {
-        productId,
-        quantity
-      });
+      const res = await marketplaceAPI.addToCart(productId, quantity);
       
       console.log('✅ Item added to cart:', res.data);
       
@@ -121,9 +118,7 @@ export const CartProvider = ({ children }) => {
     if (quantity < 1) return;
 
     try {
-      const res = await api.put(`/marketplace/cart/update/${itemId}`, {
-        quantity
-      });
+      const res = await marketplaceAPI.updateCartItem(itemId, quantity);
       
       // Handle both possible response structures
       if (res.data.cart) {
@@ -149,7 +144,7 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      const res = await api.delete(`/marketplace/cart/remove/${itemId}`);
+      const res = await marketplaceAPI.removeFromCart(itemId);
       
       // Handle both possible response structures
       if (res.data.cart) {
@@ -183,7 +178,7 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      const res = await api.delete('/marketplace/cart/clear');
+      const res = await marketplaceAPI.clearCart();
       
       // Handle both possible response structures
       if (res.data.cart) {

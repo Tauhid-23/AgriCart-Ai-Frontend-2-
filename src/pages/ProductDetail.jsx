@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { marketplaceAPI } from '../services/api';
 
 const ProductDetail = () => {
   console.log('ProductDetail.jsx component loaded - This is the main product detail page');
@@ -66,27 +67,16 @@ const ProductDetail = () => {
   // Handle add to cart
   const handleAddToCart = async () => {
     try {
-      const response = await fetch('/api/marketplace/cart/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId: product._id,
-          quantity: quantity
-        })
-      });
+      const res = await marketplaceAPI.addToCart(product._id, quantity);
       
-      const data = await response.json();
-      
-      if (data.success) {
+      if (res.data.success) {
         alert(`${product.name} added to cart!`);
       } else {
-        alert('Failed to add product to cart: ' + data.message);
+        alert('Failed to add product to cart: ' + res.data.message);
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
-      alert('Failed to add product to cart');
+      alert('Failed to add product to cart: ' + (error.response?.data?.message || error.message));
     }
   };
 

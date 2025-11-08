@@ -1,9 +1,9 @@
-// frontend/src/pages/ShoppingCart.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { ArrowLeft, Plus, Minus, Trash2, X } from 'lucide-react';
+import { marketplaceAPI } from '../services/api';
 
 const ShoppingCart = () => {
   const navigate = useNavigate();
@@ -43,8 +43,33 @@ const ShoppingCart = () => {
     }
   };
 
-  const handleCheckout = () => {
-    navigate('/marketplace/checkout');
+  const handleCheckout = async () => {
+    try {
+      // Create order with cart items
+      const orderData = {
+        items: cartItems.map(item => ({
+          productId: item.product._id,
+          quantity: item.quantity,
+          price: item.product.price
+        }))
+      };
+      
+      const res = await marketplaceAPI.createOrder(orderData);
+      
+      // Clear cart after successful order
+      await marketplaceAPI.clearCart();
+      
+      // Redirect to order confirmation
+      navigate('/marketplace/orders/confirmation', { 
+        state: { 
+          orderId: res.data.order._id,
+          orderTotal: res.data.order.totalAmount
+        } 
+      });
+    } catch (error) {
+      console.error('Error placing order:', error);
+      setLocalError('Failed to place order. Please try again.');
+    }
   };
 
   const handleBack = () => {

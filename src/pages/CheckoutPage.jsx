@@ -1,4 +1,3 @@
-// frontend/src/pages/CheckoutPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { marketplaceAPI } from '../services/api';
