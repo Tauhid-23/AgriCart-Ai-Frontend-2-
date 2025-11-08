@@ -97,15 +97,6 @@ const Marketplace = () => {
       const safeProducts = extractProductsSafely(response.products);
       console.log('📦 Safe products extracted:', safeProducts);
       
-      // Log specific information about the Premium Plastic Pot
-      const premiumPot = safeProducts.find(product => 
-        product.name && product.name.includes('Premium Plastic Planting Pot')
-      );
-      
-      if (premiumPot) {
-        console.log('🎯 Premium Plastic Pot product data:', JSON.stringify(premiumPot, null, 2));
-      }
-      
       setProducts(safeProducts || []); // Ensure products is an array
       console.log('✅ Products state updated safely');
       
