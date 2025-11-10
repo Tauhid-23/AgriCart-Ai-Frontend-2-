@@ -1337,6 +1337,24 @@ const PlantDatabase = () => {
               // UPLOAD SECTION
               <div className="space-y-6">
                 {/* Upload Area */}
+                {/* Hidden File Inputs for AI Scanner */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="scanner-gallery-input"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="scanner-camera-input"
+                />
+
+                {/* AI Scanner Upload Area */}
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
                   {uploadedImage && !isAnalyzing ? (
                     // Show preview
@@ -1383,19 +1401,24 @@ const PlantDatabase = () => {
                         Click to browse or drag & drop your image here
                       </p>
                       <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-3">
-                        <label className="btn-primary cursor-pointer flex items-center justify-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            console.log('🖼️ AI Scanner: Upload Image clicked');
+                            document.getElementById('scanner-gallery-input').click();
+                          }}
+                          className="btn-primary flex items-center justify-center space-x-2"
+                        >
                           <Upload className="h-5 w-5" />
                           <span>Choose Photo</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleImageUpload}
-                          />
-                        </label>
+                        </button>
                         <button 
+                          type="button"
+                          onClick={() => {
+                            console.log('📸 AI Scanner: Take Photo clicked');
+                            document.getElementById('scanner-camera-input').click();
+                          }}
                           className="btn-secondary flex items-center justify-center space-x-2"
-                          onClick={handleCameraCapture}
                         >
                           <Camera className="h-5 w-5" />
                           <span>Take Photo</span>
@@ -1408,7 +1431,7 @@ const PlantDatabase = () => {
                 {/* Tips */}
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                   <h3 className="font-bold text-blue-900 flex items-center mb-2">
-                    <span className="mr-2">💡</span>
+                    <span className="mr-2">📌</span>
                     Tips for Best Results
                   </h3>
                   <ul className="space-y-2 text-blue-800">

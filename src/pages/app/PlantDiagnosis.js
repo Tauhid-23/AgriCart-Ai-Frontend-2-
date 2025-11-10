@@ -368,6 +368,23 @@ const PlantDiagnosis = () => {
         </div>
       )}
 
+      {/* Hidden File Inputs */}
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        className="hidden"
+        id="gallery-input"
+      />
+      <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleImageUpload}
+        className="hidden"
+        id="camera-input"
+      />
+
       {/* Upload Section */}
       {!selectedImage && !showCameraPreview && !capturedImage && (
         <div className="bg-white rounded-xl shadow-lg p-8">
@@ -378,22 +395,23 @@ const PlantDiagnosis = () => {
               <p className="text-gray-600 mb-4">Take or upload a photo of your plant for diagnosis</p>
               
               <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-3">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="imageUpload"
-                />
-                <label
-                  htmlFor="imageUpload"
+                <button
+                  type="button"
+                  onClick={() => {
+                    console.log('🖼️ Upload Image clicked - opening gallery');
+                    document.getElementById('gallery-input').click();
+                  }}
                   className="btn-primary inline-flex items-center justify-center space-x-2 cursor-pointer"
                 >
                   <Upload className="h-5 w-5" />
                   <span>Upload Image</span>
-                </label>
+                </button>
                 <button
-                  onClick={handleCameraCapture}
+                  type="button"
+                  onClick={() => {
+                    console.log('📸 Take Photo clicked - opening camera');
+                    document.getElementById('camera-input').click();
+                  }}
                   className="btn-secondary inline-flex items-center justify-center space-x-2"
                 >
                   <Camera className="h-5 w-5" />
@@ -403,7 +421,10 @@ const PlantDiagnosis = () => {
             </div>
 
             <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-semibold text-blue-900 mb-2">📸 Tips for Best Results:</h4>
+              <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
+                <span className="mr-2">📸</span>
+                Tips for Best Results:
+              </h4>
               <ul className="text-sm text-blue-800 space-y-1">
                 <li>• Focus on affected leaves or areas</li>
                 <li>• Use natural lighting when possible</li>
