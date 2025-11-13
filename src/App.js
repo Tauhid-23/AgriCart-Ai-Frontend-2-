@@ -59,11 +59,16 @@ import ProductDetailWithLayout from "./components/ProductDetailWithLayout";
 
 import ApiTestPage from "./pages/ApiTestPage";
 
+// Chatbase Widget
+import ChatbaseWidget from "./components/chatbase/ChatbaseWidget";
+import "./components/chatbase/chatbase-custom.css";
+
 function App() {
   return (
     <AuthProvider>
       <CartProvider>
         <div className="App">
+          <ChatbaseWidget />
           <BrowserRouter>
             <Routes>
               {/* Marketing Pages */}

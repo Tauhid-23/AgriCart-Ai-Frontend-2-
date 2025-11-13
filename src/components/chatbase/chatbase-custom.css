@@ -1,0 +1,23 @@
+/* Custom Chatbase Styling for AgriCart */
+
+/* Chatbot bubble button */
+iframe[id^="chatbase-bubble"] {
+  /* Position in bottom right */
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 9999 !important;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  iframe[id^="chatbase-bubble"] {
+    bottom: 80px !important; /* Above mobile nav if you have one */
+    right: 15px !important;
+  }
+}
+
+/* Chatbot window */
+iframe[id^="chatbase-chat"] {
+  /* Ensure it's above other elements */
+  z-index: 10000 !important;
+}
