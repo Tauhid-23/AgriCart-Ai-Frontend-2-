@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
 import { 
   ArrowLeft, 
   Star, 
@@ -25,6 +26,7 @@ const ProductDetail = () => {
   console.log('app/ProductDetail.js component loaded - This is the app version');
   const { productId } = useParams();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -69,27 +71,11 @@ const ProductDetail = () => {
   // Handle add to cart
   const handleAddToCart = async () => {
     try {
-      const response = await fetch('/api/marketplace/cart/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId: product._id,
-          quantity: quantity
-        })
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        alert(`${product.name} added to cart!`);
-      } else {
-        alert('Failed to add product to cart: ' + data.message);
-      }
+      await addToCart(product._id, quantity);
+      alert(`${product.name} added to cart!`);
     } catch (error) {
       console.error('Error adding to cart:', error);
-      alert('Failed to add product to cart');
+      alert('Failed to add product to cart: ' + error.message);
     }
   };
 

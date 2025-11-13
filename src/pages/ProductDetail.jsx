@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 import { marketplaceAPI } from '../services/api';
 
 const ProductDetail = () => {
   console.log('ProductDetail.jsx component loaded - This is the main product detail page');
   const { productId } = useParams();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -67,16 +69,11 @@ const ProductDetail = () => {
   // Handle add to cart
   const handleAddToCart = async () => {
     try {
-      const res = await marketplaceAPI.addToCart(product._id, quantity);
-      
-      if (res.data.success) {
-        alert(`${product.name} added to cart!`);
-      } else {
-        alert('Failed to add product to cart: ' + res.data.message);
-      }
+      await addToCart(product._id, quantity);
+      alert(`${product.name} added to cart!`);
     } catch (error) {
       console.error('Error adding to cart:', error);
-      alert('Failed to add product to cart: ' + (error.response?.data?.message || error.message));
+      alert('Failed to add product to cart: ' + error.message);
     }
   };
 

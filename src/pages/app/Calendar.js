@@ -31,6 +31,15 @@ const Calendar = () => {
         setLoading(true);
         setError('');
         
+        console.log('📅 Calendar: Fetching tasks for current date:', currentDate);
+        
+        // Check if user is authenticated
+        if (!user) {
+          console.log('📅 Calendar: User not authenticated, skipping task fetch');
+          setLoading(false);
+          return;
+        }
+        
         // Get the first and last day of the current month
         const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
@@ -42,25 +51,46 @@ const Calendar = () => {
         const endDate = new Date(lastDay);
         endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
         
-        const response = await taskAPI.getByDateRange(
-          startDate.toISOString().split('T')[0],
-          endDate.toISOString().split('T')[0]
-        );
+        // Format dates properly for the API
+        const startDateStr = startDate.toISOString().split('T')[0];
+        const endDateStr = endDate.toISOString().split('T')[0];
+        
+        console.log('📅 Calendar: Fetching tasks for date range:', { 
+          startDateStr, 
+          endDateStr,
+          startDateRaw: startDate,
+          endDateRaw: endDate
+        });
+        
+        const response = await taskAPI.getByDateRange(startDateStr, endDateStr);
+        
+        console.log('📅 Calendar: Tasks response received:', response);
         
         // Group tasks by date
         const groupedTasks = {};
-        response.data.tasks.forEach(task => {
-          const dateKey = new Date(task.dueDate).toISOString().split('T')[0];
-          if (!groupedTasks[dateKey]) {
-            groupedTasks[dateKey] = [];
-          }
-          groupedTasks[dateKey].push(task);
-        });
-        
-        setTasksByDate(groupedTasks);
-        setTasks(response.data.tasks);
+        if (response.data.tasks && Array.isArray(response.data.tasks)) {
+          response.data.tasks.forEach(task => {
+            const dateKey = new Date(task.dueDate).toISOString().split('T')[0];
+            if (!groupedTasks[dateKey]) {
+              groupedTasks[dateKey] = [];
+            }
+            groupedTasks[dateKey].push(task);
+          });
+          
+          setTasksByDate(groupedTasks);
+          setTasks(response.data.tasks);
+        } else {
+          console.warn('📅 Calendar: Unexpected response structure:', response.data);
+          setTasksByDate({});
+          setTasks([]);
+        }
       } catch (err) {
-        console.error('Failed to load tasks:', err);
+        console.error('📅 Calendar: Failed to load tasks:', err);
+        console.error('📅 Calendar: Error details:', {
+          message: err.message,
+          response: err.response,
+          request: err.request
+        });
         setError('Failed to load tasks. Please try again.');
       } finally {
         setLoading(false);
@@ -68,7 +98,7 @@ const Calendar = () => {
     };
 
     fetchTasks();
-  }, [currentDate]);
+  }, [currentDate, user]);
 
   const getDaysInMonth = (year, month) => {
     return new Date(year, month + 1, 0).getDate();

@@ -31,14 +31,25 @@ const MyGarden = () => {
   }, []);
 
   const handleDeletePlant = async (plantId) => {
+    console.log('handleDeletePlant called with ID:', plantId);
+    
     if (window.confirm('Are you sure you want to remove this plant from your garden?')) {
       try {
-        await plantAPI.delete(plantId);
+        console.log('Deleting plant with ID:', plantId);
+        const response = await plantAPI.delete(plantId);
+        console.log('Delete response:', response);
+        
         // Refresh the plants list after deletion
-        const response = await plantAPI.getAll();
-        setPlants(response.data.plants || []);
+        const plantsResponse = await plantAPI.getAll();
+        console.log('Plants after deletion:', plantsResponse.data.plants);
+        setPlants(plantsResponse.data.plants || []);
       } catch (error) {
         console.error('Failed to delete plant:', error);
+        console.error('Error details:', {
+          message: error.message,
+          response: error.response,
+          request: error.request
+        });
         alert('Failed to delete plant. Please try again.');
       }
     }
@@ -145,7 +156,10 @@ const MyGarden = () => {
               `}>
                 <div className="absolute top-2 right-2">
                   <button
-                    onClick={() => handleDeletePlant(plant._id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeletePlant(plant._id);
+                    }}
                     className="p-1 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
                   >
                     <Trash2 className="h-4 w-4" />

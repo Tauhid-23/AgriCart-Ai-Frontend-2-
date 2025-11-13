@@ -168,11 +168,41 @@ export const authAPI = {
 
 // Plants API
 export const plantAPI = {
-  getAll: () => api.get('/plants'),
+  getAll: async () => {
+    try {
+      console.log('📤 plantAPI: Fetching all plants');
+      const response = await api.get('/plants');
+      console.log('📥 plantAPI: Plants response:', response.data);
+      return response;
+    } catch (error) {
+      console.error('❌ plantAPI: Error fetching plants:', error);
+      console.error('❌ plantAPI: Error details:', {
+        message: error.message,
+        response: error.response,
+        request: error.request
+      });
+      throw error;
+    }
+  },
   getById: (id) => api.get(`/plants/${id}`),
   create: (data) => api.post('/plants', data),
   update: (id, data) => api.put(`/plants/${id}`, data),
-  delete: (id) => api.delete(`/plants/${id}`)
+  delete: async (id) => {
+    try {
+      console.log('📤 plantAPI: Deleting plant with ID:', id);
+      const response = await api.delete(`/plants/${id}`);
+      console.log('📥 plantAPI: Delete response:', response.data);
+      return response;
+    } catch (error) {
+      console.error('❌ plantAPI: Error deleting plant:', error);
+      console.error('❌ plantAPI: Error details:', {
+        message: error.message,
+        response: error.response,
+        request: error.request
+      });
+      throw error;
+    }
+  }
 };
 
 // Tasks API
@@ -182,7 +212,23 @@ export const taskAPI = {
   create: (data) => api.post('/tasks', data),
   update: (id, data) => api.put(`/tasks/${id}`, data),
   delete: (id) => api.delete(`/tasks/${id}`),
-  complete: (id) => api.patch(`/tasks/${id}/complete`)
+  complete: (id) => api.patch(`/tasks/${id}/complete`),
+  getByDateRange: async (startDate, endDate) => {
+    try {
+      console.log('📤 taskAPI: Fetching tasks by date range', { startDate, endDate });
+      const response = await api.get(`/tasks/range?startDate=${startDate}&endDate=${endDate}`);
+      console.log('📥 taskAPI: Received tasks by date range', response.data);
+      return response;
+    } catch (error) {
+      console.error('❌ taskAPI: Error fetching tasks by date range', error);
+      console.error('❌ taskAPI: Error details:', {
+        message: error.message,
+        response: error.response,
+        request: error.request
+      });
+      throw error;
+    }
+  }
 };
 
 // Diagnosis API
