@@ -86,7 +86,7 @@ const Footer = () => {
 
             {/* Language Selector */}
             <div>
-              <select className="bg-gray-800 text-white border border-gray-700 rounded px-3 py-1 text-sm">
+              <select className="bg-gray-800 text-white border border-gray-700 rounded px-3 py-1 text-sm" aria-label="Select language">
                 <option>English</option>
                 <option>বাংলা</option>
               </select>
